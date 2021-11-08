@@ -1,7 +1,56 @@
 package dk.simonsejse.discordbot.utility;
 
+import dk.simonsejse.discordbot.commands.Command;
+import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Message;
+
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+
 public class Messages {
     public static final String BORDER_LARGE = "***~~---------------------------------------------------------------------------------------------~~***";
     public static final String BORDER_MEDIUM = "***~~------------------------------------------~~***";
     public static final String BORDER_SMALL = "***~~---------------------~~***";
+
+    public static Message commandOnCooldownMessage(String cooldown){
+        final Command annotation = InfoCommand.class.getAnnotation(Command.class);
+        return new MessageBuilder()
+                .setEmbed(new EmbedBuilder()
+                        .setTitle(String.format("Du kan ikke bruge kommandoen %s%s endnu!", annotation.prefix(), annotation.cmdName()))
+                        .setDescription(String.format("For at formindske spam at kommandoen har vi valgt at tilføje et cooldown på %d %s", annotation.cooldown(), UnitConverter.toName(annotation.unit())))
+                        .setColor(new Color(65445))
+                        .setTimestamp(LocalDateTime.now())
+                        .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
+                        .setThumbnail("https://cdn.icon-icons.com/icons2/1380/PNG/512/vcsconflicting_93497.png")
+                        .setImage("https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
+                        .setAuthor("Ups!", "https://botdover.com", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
+                        .addField("Du skal vente :clock1:", String.format("%s", cooldown), true)
+                        .build())
+                .build();
+    }
+
+
+
+    public static final Message TEMPLATE = new MessageBuilder()
+            .append("this `supports` __a__ **subset** *of* ~~markdown~~ 😃 ```js\nfunction foo(bar) {\n  console.log(bar);\n}\n\nfoo(1);```")
+            .setEmbed(new EmbedBuilder()
+                    .setTitle("title ~~(did you know you can have markdown here too?)~~", "https://discordapp.com")
+                    .setDescription("this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```")
+                    .setColor(new Color(65445))
+                    .setTimestamp(OffsetDateTime.parse("2021-11-08T07:55:46.969Z"))
+                    .setFooter("footer text", "https://cdn.discordapp.com/embed/avatars/0.png")
+                    .setThumbnail("https://cdn.discordapp.com/embed/avatars/0.png")
+                    .setImage("https://cdn.discordapp.com/embed/avatars/0.png")
+                    .setAuthor("author name", "https://discordapp.com", "https://cdn.discordapp.com/embed/avatars/0.png")
+                    .addField("🤔", "some of these properties have certain limits...", false)
+                    .addField("😱", "try exceeding some of them!", false)
+                    .addField("🙄", "an informative error should show up, and this view will remain as-is until all issues are fixed", false)
+                    .addField("<:thonkang:219069250692841473>", "these last two", true)
+                    .addField("<:thonkang:219069250692841473>", "are inline fields", true)
+                    .build())
+            .build();
+
 }
