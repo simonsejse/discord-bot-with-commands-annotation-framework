@@ -45,16 +45,7 @@ public class CooldownManager {
                     .orElse(LocalDateTime.now());
             final Duration between = Duration.between(LocalDateTime.now(), localDateTime);
 
-            switch(command.unit()){
-                case SECONDS:
-                    return String.format("%d sekund(er)", between.toSeconds());
-                case MINUTES:
-                    return between.toMinutes() != 0 ? String.format("%d minut(ter)", between.toMinutes()) : String.format("%d sekund(er)", between.toSeconds());
-                case HOURS:
-                    return between.toHours() != 0 ? String.format("%d time(r)", between.toHours()) : String.format("%d minut(ter)", between.toMinutes());
-                case DAYS:
-                    return between.toDays() != 0 ? String.format("%d dag(e)", between.toDays()) : String.format("%d time(r)", between.toHours());
-            }
+            return String.format("%dd:%dt:%02dm:%02ds", between.toDaysPart(), between.toHoursPart(), between.toMinutesPart(), between.toSecondsPart());
         }
         return "0";
     }

@@ -1,27 +1,46 @@
 package dk.simonsejse.discordbot.utility;
 
+import dk.simonsejse.discordbot.button.ButtonID;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.interactions.components.Button;
 
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Messages {
     public static final String BORDER_LARGE = "***~~---------------------------------------------------------------------------------------------~~***";
     public static final String BORDER_MEDIUM = "***~~------------------------------------------~~***";
     public static final String BORDER_SMALL = "***~~---------------------~~***";
 
+    public static final Message ALREADY_CHALLENGED_SOMEONE_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
+            .setTitle("Fejl")
+            .setDescription("Du har allerede udfordret en spiller, du skal enten slette den nuværende udfordring eller vente på at han svarer...")
+            .setColor(Colors.RED)
+            .setTimestamp(LocalDateTime.now())
+            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
+
+    public static final Message DELETED_CHALLENGE_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
+            .setTitle("Annulleret")
+            .setDescription("Din udfordring er blevet annulleret.")
+            .setColor(Colors.GREEN)
+            .setTimestamp(LocalDateTime.now())
+            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
+
     public static Message commandOnCooldownMessage(String cooldown){
         final Command annotation = InfoCommand.class.getAnnotation(Command.class);
         return new MessageBuilder()
                 .setEmbed(new EmbedBuilder()
-                        .setTitle(String.format("Du kan ikke bruge kommandoen %s%s endnu!", annotation.prefix(), annotation.cmdName()))
-                        .setDescription(String.format("For at formindske spam at kommandoen har vi valgt at tilføje et cooldown på %d %s", annotation.cooldown(), UnitConverter.toName(annotation.unit())))
-                        .setColor(new Color(65445))
+                        .setTitle(String.format("Du kan ikke bruge kommandoen /%s endnu!", annotation.cmdName()))
+                        .setDescription(String.format("For at formindske spam at kommandoen har vi valgt at tilføje et cooldown på %d %s", annotation.cooldown(), unitToName(annotation.unit())))
+                        .setColor(Colors.RED)
                         .setTimestamp(LocalDateTime.now())
                         .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
                         .setThumbnail("https://cdn.icon-icons.com/icons2/1380/PNG/512/vcsconflicting_93497.png")
@@ -31,8 +50,6 @@ public class Messages {
                         .build())
                 .build();
     }
-
-
 
     public static final Message TEMPLATE = new MessageBuilder()
             .append("this `supports` __a__ **subset** *of* ~~markdown~~ 😃 ```js\nfunction foo(bar) {\n  console.log(bar);\n}\n\nfoo(1);```")
@@ -52,5 +69,21 @@ public class Messages {
                     .addField("<:thonkang:219069250692841473>", "are inline fields", true)
                     .build())
             .build();
+
+    private static String unitToName(ChronoUnit unit){
+        switch(unit){
+            case SECONDS:
+                return "sekunder";
+            case MINUTES:
+                return "minutter";
+            case HOURS:
+                return "timer";
+            case DAYS:
+                return "dage";
+            default:
+                return "(fejl)";
+        }
+    }
+
 
 }

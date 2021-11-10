@@ -1,27 +1,30 @@
 package dk.simonsejse.discordbot.commands;
 
+import dk.simonsejse.discordbot.button.ButtonID;
 import dk.simonsejse.discordbot.cooldown.CooldownManager;
 import dk.simonsejse.discordbot.exceptions.CommandCooldownNotExpired;
 import dk.simonsejse.discordbot.exceptions.CommandException;
 import dk.simonsejse.discordbot.utility.Messages;
+import lombok.Getter;
+import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
 @Component
-public class CommandHandler implements EventListener {
+@Getter
+public class CommandHandler extends ListenerAdapter {
 
     private Map<Command, CommandPerform> commands;
     private final CooldownManager cooldownManager;
@@ -41,6 +44,46 @@ public class CommandHandler implements EventListener {
                 );
     }
 
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        try{
+            final long id = event.getUser().getIdLong();
+            final Predicate<Map.Entry<Command, CommandPerform>> containsCommand = (entry) -> entry.getKey().cmdName().equalsIgnoreCase(event.getName());
+            final Map.Entry<Command, CommandPerform> commandEntry = this.commands.entrySet()
+                    .stream()
+                    .filter(containsCommand)
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new CommandException("Denne kommando findes ikke!")
+                    );
+
+            if (this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())){
+                commandEntry.getValue().perform(event);
+                this.cooldownManager.addCooldown(id, commandEntry.getKey());
+            }else {
+                final String cooldownOnCommand = this.cooldownManager.getCooldown(id, commandEntry.getKey());
+                throw new CommandCooldownNotExpired(cooldownOnCommand);
+            }
+        }catch(CommandException e){
+            event.deferReply(true).queue(interactionHook -> {
+                interactionHook.sendMessage(e.getMessage()).queue();
+            });
+        }catch(CommandCooldownNotExpired e){
+            event.deferReply(true).queue(interactionHook -> {
+                interactionHook
+                        .sendMessage(Messages.commandOnCooldownMessage(e.getMessage()))
+                        .delay(30, TimeUnit.SECONDS)
+                        .queue(message -> {
+                            if (message.getReferencedMessage() != null) {
+                                message.delete().queueAfter(30, TimeUnit.SECONDS);
+                            }
+                        });
+            });
+        }
+    }
+
+    /*
+    * Old version 1.0
     @Override
     public void onEvent(@NotNull GenericEvent genericEvent) {
         if (genericEvent instanceof MessageReceivedEvent){
@@ -76,13 +119,18 @@ public class CommandHandler implements EventListener {
                             .queue();
                 }catch(CommandCooldownNotExpired e){
                     author.openPrivateChannel()
-                            .flatMap(privateChannel -> privateChannel.sendMessage(Messages.commandOnCooldownMessage(e.getMessage())))
+                            .flatMap(privateChannel -> {
+                                return privateChannel.sendMessage(Messages.commandOnCooldownMessage(e.getMessage()))
+                                        .setActionRow(Button.success(ButtonID.ACCEPT_COMMAND_COOLDOWN_EXCEPTION, "Forstået")
+                                                .withEmoji(Emoji.fromMarkdown("<:minn:245267426227388416>")));
+                            })
                             .delay(30, TimeUnit.SECONDS)
-                            .flatMap(Message::delete)
-                            .queue();
+                            .queue(message -> {
+                                message.delete().queueAfter(30, TimeUnit.SECONDS);
+                            });
                 }
             }
-
         }
-    }
+
+    }*/
 }

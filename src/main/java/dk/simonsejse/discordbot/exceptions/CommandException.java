@@ -1,6 +1,9 @@
 package dk.simonsejse.discordbot.exceptions;
 
-public class CommandException extends Exception {
+import lombok.Getter;
+
+@Getter
+public class CommandException extends RuntimeException {
     public CommandException(String error){
         super(error);
     }

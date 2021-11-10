@@ -1,10 +1,10 @@
 package dk.simonsejse.discordbot.commands;
 
 import dk.simonsejse.discordbot.exceptions.CommandException;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import org.springframework.stereotype.Component;
 
 @Component
 public interface CommandPerform {
-    void perform(MessageReceivedEvent event) throws CommandException;
+    void perform(SlashCommandEvent event) throws CommandException;
 }
