@@ -4,6 +4,7 @@ import dk.simonsejse.discordbot.button.ButtonListener;
 import dk.simonsejse.discordbot.commands.CommandHandler;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;

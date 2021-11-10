@@ -14,7 +14,20 @@ public class User {
 
     @Id
     @Column(name = "user_id")
-    private Long id;
+    private long id;
 
+    private long points;
 
+    public User(){
+
+    }
+
+    public User(long id){
+        this.id = id;
+        this.points = 0;
+    }
+
+    public void incrementPoint() {
+        this.points++;
+    }
 }

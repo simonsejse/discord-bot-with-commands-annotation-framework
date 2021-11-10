@@ -6,22 +6,17 @@ import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.exceptions.CommandException;
 import dk.simonsejse.discordbot.exceptions.GameChallengeAlreadySentException;
 import dk.simonsejse.discordbot.games.TicTacToeManager;
-import dk.simonsejse.discordbot.utility.Colors;
 import dk.simonsejse.discordbot.utility.Messages;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 @Command(
@@ -53,34 +48,23 @@ public class StartTicTacToeCommand implements CommandPerform {
 
         if (opponentUserById == null) throw new CommandException("Brugeren findes ikke!");
 
-        final Message build = new MessageBuilder()
-                .append(Messages.BORDER_LARGE)
-                .setEmbed(new EmbedBuilder()
-                    .setTitle("** Udfordring **")
-                    .setDescription("Du skal holde op med at se på det, du IKKE HAR, og HUSK HVAD DU KÆMPER FOR! \nHvem VIL du VÆRE FRA DETTE ØJEBLIK FREM? DET ER VÆRD AT KÆMPE FOR!")
-                    .addField("Udfordreren:", event.getUser().getAsMention(), true)
-                    .addField("Modstanderen:", opponentUserById.getAsMention(), true)
-                    .setColor(Colors.BLUE)
-                    .setTimestamp(LocalDateTime.now())
-                    .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
-                    .build())
-                .append(Messages.BORDER_LARGE)
-            .build();
-
-        event.deferReply(false)
-                .queue(interactionHook -> interactionHook.sendMessage(build)
-                        .queue());
-
-
         try {
             ticTacToeManager.addChallenge(event.getUser(), opponentUserById);
+
+            Message challengeSent = Messages.CHALLENGE_TTT(event.getUser().getAsMention(), opponentUserById.getAsMention());
+
+            event.deferReply(false)
+                    .queue(interactionHook -> interactionHook.sendMessage(challengeSent)
+                            .queue());
         } catch (GameChallengeAlreadySentException e) {
-            //found out how to set empheral to trues
-            event.getChannel().sendMessage(Messages.ALREADY_CHALLENGED_SOMEONE_TTT)
-                    .setActionRow(
-                            Button.secondary(ButtonID.ACCEPT_TIC_TAC_TOE_CHALLENGE, "Forstået"),
-                            Button.danger(ButtonID.CANCEL_TIC_TAC_TOE_CHALLENGE, "Slet udfordring ")
-                    ).queue();
+            event.deferReply(true)
+                    .queue(interactionHook -> {
+                        interactionHook.sendMessage(Messages.ALREADY_CHALLENGED_SOMEONE_TTT)
+                                .addActionRow(
+                                        Button.secondary(ButtonID.REGRET_CANCEL_TTT, "Forstået"),
+                                        Button.danger(ButtonID.CANCEL_TTT_CHALLENGE, "Slet udfordring ")
+                                ).queue();
+                    });
         }
     }
 }
