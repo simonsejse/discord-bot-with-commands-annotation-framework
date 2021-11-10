@@ -3,9 +3,11 @@ package dk.simonsejse.discordbot.utility;
 import dk.simonsejse.discordbot.button.ButtonID;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
+import dk.simonsejse.discordbot.commands.tictactoe.StartTicTacToeCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.Button;
 
 import java.awt.*;
@@ -25,6 +27,38 @@ public class Messages {
             .setTimestamp(LocalDateTime.now())
             .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
             .build();
+
+    public static final Message REGRET_CANCELING_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
+            .setTitle("IKKE annulleret!")
+            .setDescription("Din udfordring er IKKE blevet annulleret!")
+            .setColor(Colors.PINK)
+            .setTimestamp(LocalDateTime.now())
+            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
+
+    public static final Message NO_CHALLENGE_TTT = new MessageBuilder()
+            .setEmbed(new EmbedBuilder()
+                    .setTitle("Ingen udfordring?")
+                    .setDescription("Du har INGEN udfordring lige pt. start en ved brug af kommandoen /startkrydsogbolle. Hvad venter du på! Kom igang! :D ")
+                    .setColor(Color.RED)
+                    .setTimestamp(LocalDateTime.now())
+                    .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
+                    .build())
+            .build();
+
+    public static final Message CHALLENGE_TTT(String user, String opponent){
+        return new MessageBuilder()
+                .setEmbed(new EmbedBuilder()
+                        .setTitle("** Udfordring **")
+                        .setDescription("Du skal holde op med at se på det, du IKKE HAR, og HUSK HVAD DU KÆMPER FOR! \nHvem VIL du VÆRE FRA DETTE ØJEBLIK FREM? DET ER VÆRD AT KÆMPE FOR!")
+                        .addField("Udfordreren:", user, true)
+                        .addField("Modstanderen:", opponent, true)
+                        .setColor(Colors.BLUE)
+                        .setTimestamp(LocalDateTime.now())
+                        .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
+                        .build())
+                .build();
+    }
 
     public static final Message DELETED_CHALLENGE_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
             .setTitle("Annulleret")

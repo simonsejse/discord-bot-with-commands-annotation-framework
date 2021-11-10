@@ -4,6 +4,8 @@ import dk.simonsejse.discordbot.button.ButtonID;
 import dk.simonsejse.discordbot.cooldown.CooldownManager;
 import dk.simonsejse.discordbot.exceptions.CommandCooldownNotExpired;
 import dk.simonsejse.discordbot.exceptions.CommandException;
+import dk.simonsejse.discordbot.repositories.UserRepository;
+import dk.simonsejse.discordbot.services.UserService;
 import dk.simonsejse.discordbot.utility.Messages;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -25,14 +27,17 @@ import java.util.stream.Collectors;
 @Component
 @Getter
 public class CommandHandler extends ListenerAdapter {
-
     private Map<Command, CommandPerform> commands;
     private final CooldownManager cooldownManager;
 
+
+    private UserService userService;
+
     @Autowired(required = false)
-    public CommandHandler(List<CommandPerform> commandPerformList, CooldownManager cooldownManager) {
+    public CommandHandler(List<CommandPerform> commandPerformList, CooldownManager cooldownManager, UserService userService) {
         setupCommands(commandPerformList);
         this.cooldownManager = cooldownManager;
+        this.userService = userService;
     }
 
 
@@ -48,6 +53,7 @@ public class CommandHandler extends ListenerAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         try{
             final long id = event.getUser().getIdLong();
+            if (!userService.doesUserExists(id)) userService.setupUserById(id);
             final Predicate<Map.Entry<Command, CommandPerform>> containsCommand = (entry) -> entry.getKey().cmdName().equalsIgnoreCase(event.getName());
             final Map.Entry<Command, CommandPerform> commandEntry = this.commands.entrySet()
                     .stream()

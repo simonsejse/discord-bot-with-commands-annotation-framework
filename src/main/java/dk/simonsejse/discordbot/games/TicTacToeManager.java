@@ -32,4 +32,8 @@ public class TicTacToeManager {
             e.reply(Messages.DELETED_CHALLENGE_TTT).setEphemeral(true).queue();
         }else throw new GameChallengeNotSent();
     }
+
+    public boolean hasGame(User user){
+        return challenges.containsKey(user);
+    }
 }
