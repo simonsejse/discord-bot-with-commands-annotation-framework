@@ -1,4 +1,4 @@
-package dk.simonsejse.discordbot.commands.pointleaderboard;
+package dk.simonsejse.discordbot.commands.point;
 
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.CommandPerform;
@@ -33,9 +33,8 @@ public class PointLeaderBoardCommand implements CommandPerform {
 
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
-        final List<User> allUsers = userService.getTopTenPointUsers();
-        final List<User> topTenUsers = allUsers.subList(0, Math.min(allUsers.size(), 9));
-        Message topTenMessage = this.messages.getTopTenLeaderBoards(topTenUsers, event.getJDA());
+        final List<User> topTenPointUsers = userService.getTopTenPointUsers();
+        Message topTenMessage = this.messages.getTopTenLeaderBoards(topTenPointUsers, event.getJDA());
         event.deferReply(false).queue(interactionHook -> interactionHook.sendMessage(topTenMessage).queue());
     }
 }

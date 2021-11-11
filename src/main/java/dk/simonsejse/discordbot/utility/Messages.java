@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.utils.concurrent.DelayedCompletableFuture;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,11 +19,11 @@ import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
@@ -38,6 +39,15 @@ public class Messages {
     public Messages(final UserService userService){
         this.userService = userService;
     }
+
+    public Message userHasNoSufficientPermission = new MessageBuilder()
+            .setEmbed(new EmbedBuilder()
+                    .setTitle("Ikke tilstrækkelig tilladelse")
+                    .setDescription("Du har desværre ikke tilladelse til at bruge denne kommando!")
+                    .setColor(Colors.RED)
+                    .setTimestamp(LocalDateTime.now())
+                    .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
 
     public Message userCreatedInDB = new MessageBuilder()
             .setEmbed(new EmbedBuilder()
@@ -84,26 +94,32 @@ public class Messages {
 
         AtomicInteger placement = new AtomicInteger(0);
 
-        for(int i = 0; i < topTenUsers.size(); i++){
-            final User user = topTenUsers.get(i);
-            final long userId = user.getId();
+        Thread awaitEmbeddedFieldsThread = new Thread(() -> {
+            for(int i = 0; i < topTenUsers.size(); i++){
+                final User user = topTenUsers.get(i);
+                final long userId = user.getId();
 
-            jda.retrieveUserById(userId).queue(jdaUserById -> {
+                net.dv8tion.jda.api.entities.User jdaUserById = jda.retrieveUserById(userId).complete();
+
                 final String title = String.format("%d. %s - %d points", placement.incrementAndGet(), jdaUserById.getAsTag(), user.getPoints());
                 final String idLine = String.format("ID: %s", user.getId());
                 embedBuilder.addField(title, idLine, false);
-            });
-        }
+            }
+        });
+        awaitEmbeddedFieldsThread.start();
+
 
         try {
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
+            awaitEmbeddedFieldsThread.join();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         return new MessageBuilder()
                 .setEmbed(embedBuilder
                         .build())
                 .build();
+
     }
 
     public Message challengeUserInTTT(String user, String opponent){

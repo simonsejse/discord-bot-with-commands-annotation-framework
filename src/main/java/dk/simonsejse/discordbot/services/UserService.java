@@ -30,7 +30,11 @@ public class UserService {
 
 
     public List<User> getTopTenPointUsers() {
-        return this.userRepository.findAllBy();
+        return this.userRepository.findTop10ByOrderByPointsDesc();
+    }
+
+    public int getPointsByUserId(long id){
+        return this.userRepository.getUserByPoints(id);
     }
 
     public void updateUser(User user) throws UserNotFoundException {
