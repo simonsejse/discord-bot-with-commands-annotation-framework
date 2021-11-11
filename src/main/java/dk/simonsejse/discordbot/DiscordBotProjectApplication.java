@@ -1,6 +1,7 @@
 package dk.simonsejse.discordbot;
 
 import dk.simonsejse.discordbot.button.ButtonListener;
+import dk.simonsejse.discordbot.chat.ChatHandler;
 import dk.simonsejse.discordbot.commands.CommandHandler;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,6 +28,7 @@ public class DiscordBotProjectApplication {
 
 	private final CommandHandler commandHandler;
 	private final ButtonListener buttonListener;
+	private final ChatHandler chatHandler;
 
 	public static void main(String[] args) {
 		SpringApplication.run(DiscordBotProjectApplication.class, args);
@@ -38,7 +40,7 @@ public class DiscordBotProjectApplication {
 		builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE);
 		builder.setBulkDeleteSplittingEnabled(false);
 		builder.setActivity(Activity.watching("pounded"));
-		builder.addEventListeners(commandHandler, buttonListener);
+		builder.addEventListeners(commandHandler, buttonListener, chatHandler);
 
 		JDA jda = builder.build();
 

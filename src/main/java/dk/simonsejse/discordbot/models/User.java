@@ -16,15 +16,16 @@ public class User {
     @Column(name = "user_id")
     private long id;
 
+    @Column(name = "user_points")
     private long points;
-
-    public User(){
-
-    }
 
     public User(long id){
         this.id = id;
         this.points = 0;
+    }
+
+    public User(){
+
     }
 
     public void incrementPoint() {

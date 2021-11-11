@@ -34,8 +34,15 @@ public class StartTicTacToeCommand implements CommandPerform {
 
     private final Command commandAnnotation = getClass().getAnnotation(Command.class);
 
+    private final TicTacToeManager ticTacToeManager;
+    private final Messages messages;
+
     @Autowired
-    private TicTacToeManager ticTacToeManager;
+    public StartTicTacToeCommand(final TicTacToeManager ticTacToeManager, Messages messages){
+        this.ticTacToeManager = ticTacToeManager;
+        this.messages = messages;
+    }
+
 
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
@@ -51,7 +58,7 @@ public class StartTicTacToeCommand implements CommandPerform {
         try {
             ticTacToeManager.addChallenge(event.getUser(), opponentUserById);
 
-            Message challengeSent = Messages.CHALLENGE_TTT(event.getUser().getAsMention(), opponentUserById.getAsMention());
+            Message challengeSent = this.messages.challengeUserInTTT(event.getUser().getAsMention(), opponentUserById.getAsMention());
 
             event.deferReply(false)
                     .queue(interactionHook -> interactionHook.sendMessage(challengeSent)
@@ -59,7 +66,7 @@ public class StartTicTacToeCommand implements CommandPerform {
         } catch (GameChallengeAlreadySentException e) {
             event.deferReply(true)
                     .queue(interactionHook -> {
-                        interactionHook.sendMessage(Messages.ALREADY_CHALLENGED_SOMEONE_TTT)
+                        interactionHook.sendMessage(this.messages.userAlreadyChallengedSomeoneTTT)
                                 .addActionRow(
                                         Button.secondary(ButtonID.REGRET_CANCEL_TTT, "Forstået"),
                                         Button.danger(ButtonID.CANCEL_TTT_CHALLENGE, "Slet udfordring ")

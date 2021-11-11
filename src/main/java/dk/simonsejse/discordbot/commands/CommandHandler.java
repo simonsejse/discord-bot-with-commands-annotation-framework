@@ -1,18 +1,14 @@
 package dk.simonsejse.discordbot.commands;
 
-import dk.simonsejse.discordbot.button.ButtonID;
 import dk.simonsejse.discordbot.cooldown.CooldownManager;
 import dk.simonsejse.discordbot.exceptions.CommandCooldownNotExpired;
 import dk.simonsejse.discordbot.exceptions.CommandException;
-import dk.simonsejse.discordbot.repositories.UserRepository;
+import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
 import dk.simonsejse.discordbot.services.UserService;
 import dk.simonsejse.discordbot.utility.Messages;
 import lombok.Getter;
-import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,14 +23,17 @@ import java.util.stream.Collectors;
 @Component
 @Getter
 public class CommandHandler extends ListenerAdapter {
+
     private Map<Command, CommandPerform> commands;
+
+    //DI
     private final CooldownManager cooldownManager;
-
-
-    private UserService userService;
+    private final UserService userService;
+    private final Messages messages;
 
     @Autowired(required = false)
-    public CommandHandler(List<CommandPerform> commandPerformList, CooldownManager cooldownManager, UserService userService) {
+    public CommandHandler(List<CommandPerform> commandPerformList, CooldownManager cooldownManager, UserService userService, Messages messages) {
+        this.messages = messages;
         setupCommands(commandPerformList);
         this.cooldownManager = cooldownManager;
         this.userService = userService;
@@ -51,9 +50,11 @@ public class CommandHandler extends ListenerAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        final long id = event.getUser().getIdLong();
         try{
-            final long id = event.getUser().getIdLong();
-            if (!userService.doesUserExists(id)) userService.setupUserById(id);
+            //Increment points for each command
+            this.userService.incrementUserPointByUserId(id);
+
             final Predicate<Map.Entry<Command, CommandPerform>> containsCommand = (entry) -> entry.getKey().cmdName().equalsIgnoreCase(event.getName());
             final Map.Entry<Command, CommandPerform> commandEntry = this.commands.entrySet()
                     .stream()
@@ -77,7 +78,7 @@ public class CommandHandler extends ListenerAdapter {
         }catch(CommandCooldownNotExpired e){
             event.deferReply(true).queue(interactionHook -> {
                 interactionHook
-                        .sendMessage(Messages.commandOnCooldownMessage(e.getMessage()))
+                        .sendMessage(this.messages.commandOnCooldownMessage(e.getMessage()))
                         .delay(30, TimeUnit.SECONDS)
                         .queue(message -> {
                             if (message.getReferencedMessage() != null) {
@@ -85,6 +86,11 @@ public class CommandHandler extends ListenerAdapter {
                             }
                         });
             });
+        } catch (UserNotFoundException e) {
+            event.deferReply(true).queue(interactionHook -> {
+                interactionHook.sendMessage(this.messages.userCreatedInDB).queue();
+            });
+            this.userService.createNewUserByID(id);
         }
     }
 

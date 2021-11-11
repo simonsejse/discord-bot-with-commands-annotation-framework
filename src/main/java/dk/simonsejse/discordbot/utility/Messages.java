@@ -1,26 +1,54 @@
 package dk.simonsejse.discordbot.utility;
 
-import dk.simonsejse.discordbot.button.ButtonID;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
-import dk.simonsejse.discordbot.commands.tictactoe.StartTicTacToeCommand;
+import dk.simonsejse.discordbot.models.User;
+import dk.simonsejse.discordbot.services.UserService;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import org.apache.logging.log4j.util.TriConsumer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+@Component
 public class Messages {
-    public static final String BORDER_LARGE = "***~~---------------------------------------------------------------------------------------------~~***";
-    public static final String BORDER_MEDIUM = "***~~------------------------------------------~~***";
-    public static final String BORDER_SMALL = "***~~---------------------~~***";
 
-    public static final Message ALREADY_CHALLENGED_SOMEONE_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
+    private final UserService userService;
+
+    @Autowired
+    public Messages(final UserService userService){
+        this.userService = userService;
+    }
+
+    public Message userCreatedInDB = new MessageBuilder()
+            .setEmbed(new EmbedBuilder()
+            .setTitle("Oprettet i DB!")
+            .setDescription("Vi kunne se, at du ikke var oprettet i bottens database, prøv kommandoen igen!")
+            .setColor(Colors.ORANGE)
+            .setTimestamp(LocalDateTime.now())
+            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
+
+    public Message userAlreadyChallengedSomeoneTTT = new MessageBuilder().setEmbed(new EmbedBuilder()
             .setTitle("Fejl")
             .setDescription("Du har allerede udfordret en spiller, du skal enten slette den nuværende udfordring eller vente på at han svarer...")
             .setColor(Colors.RED)
@@ -28,7 +56,7 @@ public class Messages {
             .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
             .build();
 
-    public static final Message REGRET_CANCELING_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
+    public Message userRegretCancellingTTT = new MessageBuilder().setEmbed(new EmbedBuilder()
             .setTitle("IKKE annulleret!")
             .setDescription("Din udfordring er IKKE blevet annulleret!")
             .setColor(Colors.PINK)
@@ -36,7 +64,7 @@ public class Messages {
             .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
             .build();
 
-    public static final Message NO_CHALLENGE_TTT = new MessageBuilder()
+    public Message userHasNoChallengeTTT = new MessageBuilder()
             .setEmbed(new EmbedBuilder()
                     .setTitle("Ingen udfordring?")
                     .setDescription("Du har INGEN udfordring lige pt. start en ved brug af kommandoen /startkrydsogbolle. Hvad venter du på! Kom igang! :D ")
@@ -46,7 +74,39 @@ public class Messages {
                     .build())
             .build();
 
-    public static final Message CHALLENGE_TTT(String user, String opponent){
+    public Message getTopTenLeaderBoards(List<User> topTenUsers, JDA jda) {
+        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle("Top 10 Leaderboards")
+                .setDescription("Her ses leaderboards over de største alfa-heste på serveren!")
+                .setAuthor("Bot Dover")
+                .setColor(Colors.GOLD)
+                .setTimestamp(LocalDateTime.now())
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256");
+
+        AtomicInteger placement = new AtomicInteger(0);
+
+        for(int i = 0; i < topTenUsers.size(); i++){
+            final User user = topTenUsers.get(i);
+            final long userId = user.getId();
+
+            jda.retrieveUserById(userId).queue(jdaUserById -> {
+                final String title = String.format("%d. %s - %d points", placement.incrementAndGet(), jdaUserById.getAsTag(), user.getPoints());
+                final String idLine = String.format("ID: %s", user.getId());
+                embedBuilder.addField(title, idLine, false);
+            });
+        }
+
+        try {
+            completableFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return new MessageBuilder()
+                .setEmbed(embedBuilder
+                        .build())
+                .build();
+    }
+
+    public Message challengeUserInTTT(String user, String opponent){
         return new MessageBuilder()
                 .setEmbed(new EmbedBuilder()
                         .setTitle("** Udfordring **")
@@ -60,7 +120,7 @@ public class Messages {
                 .build();
     }
 
-    public static final Message DELETED_CHALLENGE_TTT = new MessageBuilder().setEmbed(new EmbedBuilder()
+    public Message deletedChallengeTTT = new MessageBuilder().setEmbed(new EmbedBuilder()
             .setTitle("Annulleret")
             .setDescription("Din udfordring er blevet annulleret.")
             .setColor(Colors.GREEN)
@@ -68,7 +128,7 @@ public class Messages {
             .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
             .build();
 
-    public static Message commandOnCooldownMessage(String cooldown){
+    public Message commandOnCooldownMessage(String cooldown){
         final Command annotation = InfoCommand.class.getAnnotation(Command.class);
         return new MessageBuilder()
                 .setEmbed(new EmbedBuilder()
@@ -119,5 +179,8 @@ public class Messages {
         }
     }
 
+    public static final String BORDER_LARGE = "***~~---------------------------------------------------------------------------------------------~~***";
+    public static final String BORDER_MEDIUM = "***~~------------------------------------------~~***";
+    public static final String BORDER_SMALL = "***~~---------------------~~***";
 
 }
