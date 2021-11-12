@@ -1,14 +1,12 @@
 package dk.simonsejse.discordbot.commands;
 
 import dk.simonsejse.discordbot.cooldown.CooldownManager;
-import dk.simonsejse.discordbot.exceptions.CommandCooldownNotExpired;
-import dk.simonsejse.discordbot.exceptions.CommandException;
-import dk.simonsejse.discordbot.exceptions.UserNoSufficientPermission;
-import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
+import dk.simonsejse.discordbot.exceptions.*;
 import dk.simonsejse.discordbot.models.Role;
 import dk.simonsejse.discordbot.services.UserService;
 import dk.simonsejse.discordbot.utility.Messages;
 import lombok.Getter;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -16,10 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -72,11 +67,14 @@ public class CommandHandler extends ListenerAdapter {
                     );
 
             if (this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())){
-                final Member member = event.getGuild().getMember(event.getUser());
-                if (doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded())){
-                    commandEntry.getValue().perform(event);
-                    this.cooldownManager.addCooldown(id, commandEntry.getKey());
-                }else throw new UserNoSufficientPermission();
+                Optional<Guild> guild = Optional.<Guild>ofNullable(event.getGuild());
+                if (guild.isPresent()){
+                    final Member member = guild.get().retrieveMemberById(event.getUser().getIdLong()).complete();
+                    if (doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded())){
+                        commandEntry.getValue().perform(event);
+                        this.cooldownManager.addCooldown(id, commandEntry.getKey());
+                    }else throw new UserNoSufficientPermission();
+                }else throw new GuildNullPointerException();
             }else {
                 final String cooldownOnCommand = this.cooldownManager.getCooldown(id, commandEntry.getKey());
                 throw new CommandCooldownNotExpired(cooldownOnCommand);
@@ -105,6 +103,12 @@ public class CommandHandler extends ListenerAdapter {
             event.deferReply(false).queue(interactionHook -> {
                 interactionHook
                         .sendMessage(this.messages.userHasNoSufficientPermission)
+                        .queue();
+            });
+        } catch (GuildNullPointerException e) {
+            event.deferReply(false).queue(interactionHook -> {
+                interactionHook
+                        .sendMessage(this.messages.guildNullPointerException)
                         .queue();
             });
         }

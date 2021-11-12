@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
     parameterDescriptions = {"bruger du skal sætte navn på", "hvor mange point brugeren skal have!"},
     isRequired = {true, true},
     roleNeeded = Role.OWNER
-
 )
 public class SetPointCommand implements CommandPerform {
 

@@ -4,11 +4,8 @@ import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.exceptions.CommandException;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
 
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 
 @Command(
         cmdName = "info",

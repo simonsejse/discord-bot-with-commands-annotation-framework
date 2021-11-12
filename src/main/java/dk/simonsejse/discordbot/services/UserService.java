@@ -33,10 +33,6 @@ public class UserService {
         return this.userRepository.findTop10ByOrderByPointsDesc();
     }
 
-    public int getPointsByUserId(long id){
-        return this.userRepository.getUserByPoints(id);
-    }
-
     public void updateUser(User user) throws UserNotFoundException {
         if (!this.userRepository.existsUserById(user.getId())) throw new UserNotFoundException();
         this.userRepository.save(user);

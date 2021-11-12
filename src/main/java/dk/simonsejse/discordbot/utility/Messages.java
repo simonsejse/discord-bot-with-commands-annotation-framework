@@ -33,12 +33,14 @@ import java.util.stream.Collectors;
 @Component
 public class Messages {
 
-    private final UserService userService;
-
-    @Autowired
-    public Messages(final UserService userService){
-        this.userService = userService;
-    }
+    public Message guildNullPointerException = new MessageBuilder()
+            .setEmbed(new EmbedBuilder()
+                    .setTitle("Intet Guild kun findes!")
+                    .setDescription("Der er sket en fejl, da botten forsøgte at finde dit guild! Prøv igen, eller kontakt SimonWin#1610")
+                    .setColor(Colors.RED)
+                    .setTimestamp(LocalDateTime.now())
+            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
 
     public Message userHasNoSufficientPermission = new MessageBuilder()
             .setEmbed(new EmbedBuilder()
@@ -94,9 +96,8 @@ public class Messages {
 
         AtomicInteger placement = new AtomicInteger(0);
 
-        Thread awaitEmbeddedFieldsThread = new Thread(() -> {
-            for(int i = 0; i < topTenUsers.size(); i++){
-                final User user = topTenUsers.get(i);
+        CompletableFuture<Void> mainThreadAwaitEmbeddedFields = CompletableFuture.runAsync(() -> {
+            for (final User user : topTenUsers) {
                 final long userId = user.getId();
 
                 net.dv8tion.jda.api.entities.User jdaUserById = jda.retrieveUserById(userId).complete();
@@ -106,12 +107,11 @@ public class Messages {
                 embedBuilder.addField(title, idLine, false);
             }
         });
-        awaitEmbeddedFieldsThread.start();
 
 
         try {
-            awaitEmbeddedFieldsThread.join();
-        } catch (InterruptedException e) {
+            mainThreadAwaitEmbeddedFields.get();
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
@@ -157,6 +157,35 @@ public class Messages {
                         .setImage("https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
                         .setAuthor("Ups!", "https://botdover.com", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
                         .addField("Du skal vente :clock1:", String.format("%s", cooldown), true)
+                        .build())
+                .build();
+    }
+
+    public Message amountOfUserPointsByPointsAndName(Optional<Long> optionUserPointsOpt, Optional<String> optionUserNameOpt, long userPoints) {
+        final StringBuilder description = new StringBuilder();
+        Optional<Boolean> optionUserHasMorePointsOpt = Optional.empty();
+
+        if (optionUserPointsOpt.isPresent() && optionUserNameOpt.isPresent()){
+           final long optionUserPoint = optionUserPointsOpt.get();
+           final String optionUserName = optionUserNameOpt.get();
+           optionUserHasMorePointsOpt = Optional.of(optionUserPoint > userPoints);
+
+           description.append(optionUserHasMorePointsOpt.get()
+                   ?
+                   optionUserName + "har flere points end dig! Rimeligt pinligt i min optik.." +
+                           "\nHan har "+optionUserPoint+" point, det svarer til "+(optionUserPoint-userPoints)+" flere points end dig.."
+                   : "Du har flere point end "+optionUserName+"! Godt gået! " +
+                   "\nDu har "+userPoints+" point, det svarer til "+(userPoints-optionUserPoint)+" flere points end "+optionUserName);
+       }else description.append(String.format("Du har %s points!", userPoints));
+
+
+        return new MessageBuilder()
+                .setEmbed(new EmbedBuilder()
+                        .setTitle("POINT")
+                        .setDescription(description.toString())
+                        .setColor(optionUserHasMorePointsOpt.map(optionMorePoints -> optionMorePoints ? Colors.RED : Colors.GREEN).orElse(Colors.BLUE))
+                        .setTimestamp(LocalDateTime.now())
+                        .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256")
                         .build())
                 .build();
     }
