@@ -44,4 +44,12 @@ public class UserService {
         user.incrementPoint();
         updateUser(user);
     }
+
+    public long setUserPointsById(long userId, long newPoints) throws UserNotFoundException{
+        final User user = userRepository.getUserById(userId).orElseThrow(UserNotFoundException::new);
+        final long oldPoints = user.getPoints();
+        user.setPoints(newPoints);
+        this.userRepository.save(user);
+        return oldPoints;
+    }
 }

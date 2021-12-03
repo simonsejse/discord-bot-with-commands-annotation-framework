@@ -3,35 +3,32 @@ package dk.simonsejse.discordbot.utility;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
 import dk.simonsejse.discordbot.models.User;
-import dk.simonsejse.discordbot.services.UserService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.utils.concurrent.DelayedCompletableFuture;
-import org.apache.logging.log4j.util.TriConsumer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Component
 public class Messages {
+
+    public Message setUserPointsMissingArguments = new MessageBuilder() .setEmbed(new EmbedBuilder()
+            .setTitle("Du mangler parameter!")
+            .setDescription("Der er sket en fejl, da denne kommando skal have parameter given!")
+            .setColor(Colors.RED)
+            .setTimestamp(LocalDateTime.now())
+            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
 
     public Message guildNullPointerException = new MessageBuilder()
             .setEmbed(new EmbedBuilder()
@@ -46,6 +43,15 @@ public class Messages {
             .setEmbed(new EmbedBuilder()
                     .setTitle("Ikke tilstrækkelig tilladelse")
                     .setDescription("Du har desværre ikke tilladelse til at bruge denne kommando!")
+                    .setColor(Colors.RED)
+                    .setTimestamp(LocalDateTime.now())
+                    .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+            .build();
+
+    public Message userNotFound = new MessageBuilder()
+            .setEmbed(new EmbedBuilder()
+                    .setTitle("Brugeren kunne ikke blive fundet")
+                    .setDescription("Vi kunne desværre ikke finde denne bruger i vores db...")
                     .setColor(Colors.RED)
                     .setTimestamp(LocalDateTime.now())
                     .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
@@ -86,8 +92,21 @@ public class Messages {
                     .build())
             .build();
 
+    public Message successfullySetUserPoints(net.dv8tion.jda.api.entities.User targetUser, long points, long oldPoints) {
+        return new MessageBuilder().setEmbed(new EmbedBuilder()
+                .setTitle("Pooof!")
+                .setDescription(String.format("En magisk besværgelse er indtruffet for %s på grund af dette er vedkommendes point sat til %d!", targetUser.getAsTag(), points))
+                .addField("ID:", String.valueOf(targetUser.getIdLong()), true)
+                .addField("Gamle Points", String.valueOf(oldPoints), true)
+                .addField("Ny Points", String.valueOf(points), true)
+                .setColor(Colors.GREEN)
+                .setTimestamp(LocalDateTime.now())
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+                .build();
+    }
+
     public Message getTopTenLeaderBoards(List<User> topTenUsers, JDA jda) {
-        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle("Top 10 Leaderboards")
+        final EmbedBuilder leaderboard = new EmbedBuilder().setTitle("Top 10 Leaderboards")
                 .setDescription("Her ses leaderboards over de største alfa-heste på serveren!")
                 .setAuthor("Bot Dover")
                 .setColor(Colors.GOLD)
@@ -104,11 +123,9 @@ public class Messages {
 
                 final String title = String.format("%d. %s - %d points", placement.incrementAndGet(), jdaUserById.getAsTag(), user.getPoints());
                 final String idLine = String.format("ID: %s", user.getId());
-                embedBuilder.addField(title, idLine, false);
+                leaderboard.addField(title, idLine, false);
             }
         });
-
-
         try {
             mainThreadAwaitEmbeddedFields.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -116,7 +133,7 @@ public class Messages {
         }
 
         return new MessageBuilder()
-                .setEmbed(embedBuilder
+                .setEmbed(leaderboard
                         .build())
                 .build();
 
@@ -172,7 +189,7 @@ public class Messages {
 
            description.append(optionUserHasMorePointsOpt.get()
                    ?
-                   optionUserName + "har flere points end dig! Rimeligt pinligt i min optik.." +
+                   optionUserName + " har flere points end dig! Rimeligt pinligt i min optik.." +
                            "\nHan har "+optionUserPoint+" point, det svarer til "+(optionUserPoint-userPoints)+" flere points end dig.."
                    : "Du har flere point end "+optionUserName+"! Godt gået! " +
                    "\nDu har "+userPoints+" point, det svarer til "+(userPoints-optionUserPoint)+" flere points end "+optionUserName);
@@ -227,5 +244,6 @@ public class Messages {
     public static final String BORDER_LARGE = "***~~---------------------------------------------------------------------------------------------~~***";
     public static final String BORDER_MEDIUM = "***~~------------------------------------------~~***";
     public static final String BORDER_SMALL = "***~~---------------------~~***";
+
 
 }

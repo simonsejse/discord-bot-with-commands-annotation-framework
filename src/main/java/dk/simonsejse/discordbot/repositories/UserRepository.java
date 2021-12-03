@@ -14,5 +14,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsUserById(Long id);
     List<User> findTop10ByOrderByPointsDesc();
     Optional<User> getUserById(long id);
-    int getUserByPoints(long id);
 }

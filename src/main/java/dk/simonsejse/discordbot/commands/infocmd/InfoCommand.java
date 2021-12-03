@@ -18,7 +18,6 @@ public class InfoCommand implements CommandPerform {
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
         event.reply("Ja, det virker jo fint..").queue();
-
     }
 
 
