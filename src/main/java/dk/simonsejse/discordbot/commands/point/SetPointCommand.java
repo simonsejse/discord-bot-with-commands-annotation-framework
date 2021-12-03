@@ -27,7 +27,6 @@ public class SetPointCommand implements CommandPerform {
     private final Messages messages;
     private final UserService userService;
 
-
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
         if (!event.getOptions().isEmpty()){
