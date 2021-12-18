@@ -71,17 +71,34 @@ public class CommandHandler extends ListenerAdapter {
                             new CommandException("Denne kommando findes ikke!")
                     );
 
-            if (this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())){
-                final Member member = event.getGuild().getMember(event.getUser());
-                if (doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded())){
-                    commandEntry.getValue().perform(event);
-                    this.cooldownManager.addCooldown(id, commandEntry.getKey());
-                }else throw new UserNoSufficientPermission();
-            }else {
+            final Member member = event.getGuild().retrieveMember(event.getUser()).complete();
+
+            final Role[] exclusions = commandEntry.getKey().exclusions();
+
+            System.out.println("t"+member.getRoles());
+            final Set<String> roles = member.getRoles()
+                    .stream()
+                    .map(net.dv8tion.jda.api.entities.Role::getName)
+                    .collect(toSet());
+
+            System.out.println("s"+roles.size());
+            final boolean isExcluded = Arrays.stream(exclusions)
+                    .map(Role::getRole)
+                    .anyMatch(roles::contains);
+
+
+            if (!isExcluded && !this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())) {
                 final String cooldownOnCommand = this.cooldownManager.getCooldown(id, commandEntry.getKey());
                 throw new CommandCooldownNotExpired(cooldownOnCommand);
             }
+            if (!isExcluded && !userService.doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded()))
+                throw new UserNoSufficientPermission();
+
+            this.cooldownManager.addCooldown(id, commandEntry.getKey());
+            commandEntry.getValue().perform(event);
+
         }catch(CommandException e){
+            if (e.getMessage() == null) return;
             event.deferReply(true).queue(interactionHook -> {
                 interactionHook.sendMessage(e.getMessage()).queue();
             });
@@ -98,9 +115,9 @@ public class CommandHandler extends ListenerAdapter {
             });
         } catch (UserNotFoundException e) {
             event.deferReply(true).queue(interactionHook -> {
-                interactionHook.sendMessage(this.messages.userCreatedInDB).queue();
+                interactionHook.sendMessage(this.messages.userCreatedInDB(e.getId())).queue();
             });
-            this.userService.createNewUserByID(id);
+            this.userService.createNewUserByID(e.getId());
         } catch (UserNoSufficientPermission userNoSufficientPermission) {
             event.deferReply(false).queue(interactionHook -> {
                 interactionHook
@@ -108,22 +125,6 @@ public class CommandHandler extends ListenerAdapter {
                         .queue();
             });
         }
-    }
-
-    public boolean doesMemberHaveSufficientRole(Member member, Role requiredRole) {
-        final Set<Role> rolesBelowRequiredRole = Arrays.stream(Role.values())
-                .filter(role -> role.priority > requiredRole.priority)
-                .collect(Collectors.toSet());
-
-        rolesBelowRequiredRole.add(requiredRole);
-
-        return member.getRoles().stream()
-                .map(net.dv8tion.jda.api.entities.Role::getName)
-                .anyMatch(
-                        rolesBelowRequiredRole.stream()
-                                .map(Role::getRole)
-                                .collect(Collectors.toSet())
-                                ::contains);
     }
 
     /*

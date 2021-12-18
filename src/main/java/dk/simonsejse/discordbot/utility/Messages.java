@@ -2,33 +2,29 @@ package dk.simonsejse.discordbot.utility;
 
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
-import dk.simonsejse.discordbot.models.User;
+import dk.simonsejse.discordbot.entities.Report;
+import dk.simonsejse.discordbot.entities.User;
+import dk.simonsejse.discordbot.models.mcreq.McResponse;
+import dk.simonsejse.discordbot.models.mcreq.NameHistoryItem;
+import dk.simonsejse.discordbot.models.mcreq.Player;
+import dk.simonsejse.discordbot.models.weatherreq.Condition;
+import dk.simonsejse.discordbot.models.weatherreq.Current;
+import dk.simonsejse.discordbot.models.weatherreq.Location;
+import dk.simonsejse.discordbot.models.weatherreq.WeatherResponse;
 import dk.simonsejse.discordbot.services.UserService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.utils.concurrent.DelayedCompletableFuture;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Component
 public class Messages {
@@ -40,6 +36,24 @@ public class Messages {
         this.userService = userService;
     }
 
+    public Message getUserReportMessage(List<Report> reports, net.dv8tion.jda.api.entities.User user){
+        final int reportSize = reports.size();
+        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(String.format("Reports på %s", user.getAsTag())).setDescription(String.format("Her kan du se en oversigt over report for %s (%d)", user.getAsTag(), user.getIdLong())).setAuthor(user.getId()).setThumbnail(user.getAvatarUrl()).setColor(Colors.PURPLE).setTimestamp(LocalDateTime.now()).setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").addField(new MessageEmbed.Field("Navn", user.getAsMention(), false)).addField(new MessageEmbed.Field("ID", user.getId(), false)).addField(new MessageEmbed.Field("Antal reports", reportSize + (reportSize >= 7 ? " (HØJT)" : reportSize >= 3 ? " (MEDIUM)" : " (LAV)"), false));
+
+        reports.stream().forEach(report -> {
+           embedBuilder.addField(
+                   new MessageEmbed.Field(
+                           String.valueOf(report.getRid()), report.toString()+"\n", false
+                   )
+           );
+        });
+
+        return new MessageBuilder()
+                .setEmbed(
+                        embedBuilder.build()
+                ).build();
+    }
+
     public Message userHasNoSufficientPermission = new MessageBuilder()
             .setEmbed(new EmbedBuilder()
                     .setTitle("Ikke tilstrækkelig tilladelse")
@@ -49,14 +63,16 @@ public class Messages {
                     .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
             .build();
 
-    public Message userCreatedInDB = new MessageBuilder()
-            .setEmbed(new EmbedBuilder()
-            .setTitle("Oprettet i DB!")
-            .setDescription("Vi kunne se, at du ikke var oprettet i bottens database, prøv kommandoen igen!")
-            .setColor(Colors.ORANGE)
-            .setTimestamp(LocalDateTime.now())
-            .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
-            .build();
+    public Message userCreatedInDB(long id) {
+        return new MessageBuilder()
+                .setEmbed(new EmbedBuilder()
+                        .setTitle("Oprettet i DB!")
+                        .setDescription(String.format("Vi kunne se, at ID: %d ikke var oprettet i bottens database, prøv kommandoen igen!", id))
+                        .setColor(Colors.ORANGE)
+                        .setTimestamp(LocalDateTime.now())
+                        .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+                .build();
+    }
 
     public Message userAlreadyChallengedSomeoneTTT = new MessageBuilder().setEmbed(new EmbedBuilder()
             .setTitle("Fejl")
@@ -97,12 +113,12 @@ public class Messages {
         Thread awaitEmbeddedFieldsThread = new Thread(() -> {
             for(int i = 0; i < topTenUsers.size(); i++){
                 final User user = topTenUsers.get(i);
-                final long userId = user.getId();
+                final long userId = user.getUserId();
 
                 net.dv8tion.jda.api.entities.User jdaUserById = jda.retrieveUserById(userId).complete();
 
                 final String title = String.format("%d. %s - %d points", placement.incrementAndGet(), jdaUserById.getAsTag(), user.getPoints());
-                final String idLine = String.format("ID: %s", user.getId());
+                final String idLine = String.format("ID: %s", user.getUserId());
                 embedBuilder.addField(title, idLine, false);
             }
         });
@@ -199,4 +215,104 @@ public class Messages {
     public static final String BORDER_MEDIUM = "***~~------------------------------------------~~***";
     public static final String BORDER_SMALL = "***~~---------------------~~***";
 
+    public Message successfullyWarnUser(net.dv8tion.jda.api.entities.User warned, net.dv8tion.jda.api.entities.User warnedBy, String reason, LocalDateTime when) {
+        final String iconUrl = warned.getAvatarUrl();
+        final String warnedAsTag = warned.getAsTag();
+        final String warnedByAsTag = warnedBy.getAsTag();
+        final long warnedUserId = warned.getIdLong();
+        final long warnedByUserId = warnedBy.getIdLong();
+
+        return new MessageBuilder().setEmbed(new EmbedBuilder()
+                .setTitle("ADVARSEL!")
+                .setAuthor(warnedAsTag, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", iconUrl)
+                .setDescription(String.format("En advarsel til %s | %d", warnedAsTag, warnedUserId))
+                .addField(new MessageEmbed.Field("Advarsel til", String.format("%s", warnedAsTag), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("ID", String.format("%d", warnedUserId), true))
+                .addField(new MessageEmbed.Field("Givet af", String.format("%s", warnedByAsTag), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("ID", String.format("%d", warnedByUserId), true))
+                .addField(new MessageEmbed.Field("Begrundelse", reason, true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Tidspunkt", when.format(DateFormat.MAIN), true))
+                .setThumbnail("https://thumbs.gfycat.com/UniqueSizzlingFinwhale-max-1mb.gif")
+                .setColor(Colors.PINK)
+                .setTimestamp(LocalDateTime.now())
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+                .build();
+
+    }
+
+    public Message getMcInfo(McResponse response) {
+        final Player player = response.getData().getPlayer();
+        final EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setTitle("Minecraft Info")
+                .setAuthor(player.getUsername(), player.getAvatar(), player.getAvatar())
+                .setDescription(String.format("Information omkring spilleren %s | %s", player.getUsername(), player.getId()))
+                .addField(new MessageEmbed.Field("Navn", player.getUsername(), false))
+
+                .addField(new MessageEmbed.Field("ID", player.getId(), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("RID", player.getRawId(), true))
+                .addField(new MessageEmbed.Field("Navn Historik:", "\u200b", false));
+
+        for(NameHistoryItem oldName : player.getMeta().getNameHistory()){
+            embedBuilder.addField(new MessageEmbed.Field("Navn", oldName.getName(), true));
+            embedBuilder.addBlankField(true);
+            final long changedToAt = oldName.getChangedToAt();
+            embedBuilder.addField(new MessageEmbed.Field(changedToAt == 0 ? "" : "Dato", changedToAt == 0 ? "Nuværende" : LocalDateTime.ofInstant(Instant.ofEpochMilli(changedToAt), ZoneId.systemDefault()).format(DateFormat.MAIN), true));
+        }
+
+        return new MessageBuilder().setEmbed(embedBuilder
+                .setThumbnail(player.getAvatar())
+                .setColor(Colors.PINK)
+                .setTimestamp(LocalDateTime.now())
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+                .build();
+    }
+
+    public Message getWeatherReport(WeatherResponse response) {
+        final Location location = response.getLocation();
+        final Current current = response.getCurrent();
+        final Condition condition = current.getCondition();
+        // - //cdn.weatherapi.com/weather/64x64/night/266.png
+        // Needs to remove the two // at start and add https://
+        final String iconUrl = String.format("https://%s", condition.getIcon().substring(2));
+
+        return new MessageBuilder().setEmbed(new EmbedBuilder()
+                .setTitle("Vejr rapport")
+                .setAuthor(location.getName(), "https://www.youtube.com/watch?v=dQw4w9WgXcQ", iconUrl)
+                .setDescription(String.format("%s, %s, %s, latitude %f, longtitude %f, tidszone %s, tidspunkt %s", location.getName(), location.getCountry(), location.getRegion(), location.getLat(), location.getLon(), location.getTzId(), location.getLocaltime()))
+                .addField(new MessageEmbed.Field("Sidst opdateret", current.getLastUpdated(), false))
+                .addField(new MessageEmbed.Field("Temperatur (celcius)", String.format("%.2f° C", current.getTempC()), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Temperatur (fahrenheit)", String.format("%.2f° F", current.getTempF()), true))
+                .addField(new MessageEmbed.Field("Dag", current.getIsDay() == 1 ? "dag" : "aften", true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Vejr", condition.getText(), true))
+                .addField(new MessageEmbed.Field("Vind (mph)", String.format("%.2f mph", current.getWindMph()), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Vind (km/t)", String.format("%.2f km/t", current.getWindKph()), true))
+                .addField(new MessageEmbed.Field("Vind (grad)", String.format("%d°", current.getWindDegree()), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Vind (retning)", String.format("%s°", current.getWindDir()), true))
+                .addField(new MessageEmbed.Field("Tryk i Millibar", String.format("%.2f millibar", current.getPressureMb()), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Tryk i inches", String.format("%.2f inches", current.getPressureIn()), true))
+                .addField(new MessageEmbed.Field("Nedbørsmængde i millimeter", String.format("%.4f mm", current.getPrecipMm()), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Nedbørsmængde i inches", String.format("%.4f in", current.getPrecipIn()), true))
+                .addField(new MessageEmbed.Field("Fugtighed (i procent)", String.format("%d%%", current.getHumidity()), true))
+                .addBlankField(true)
+                .addField(new MessageEmbed.Field("Sky (dækker over himlen)", String.format("%d%%", current.getCloud()), true))
+                .addField(new MessageEmbed.Field("Føles som (i grader | i fehrenheit)", String.format("%.2f ° | %.2f °", current.getFeelslikeC(), current.getFeelslikeF()), true))
+                .addField(new MessageEmbed.Field("UV Index", String.format("%.2f", current.getUv()), true))
+                .addField(new MessageEmbed.Field("Vindstød (mph | kph)", String.format("%.2f mph | %.2f km/t", current.getGustMph(), current.getGustKph()), true))
+
+                .setThumbnail(iconUrl)
+                .setColor(Colors.PINK)
+                .setTimestamp(LocalDateTime.now())
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
+                .build();
+    }
 }

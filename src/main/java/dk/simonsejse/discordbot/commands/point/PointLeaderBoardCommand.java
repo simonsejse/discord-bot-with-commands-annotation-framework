@@ -3,7 +3,7 @@ package dk.simonsejse.discordbot.commands.point;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.exceptions.CommandException;
-import dk.simonsejse.discordbot.models.User;
+import dk.simonsejse.discordbot.entities.User;
 import dk.simonsejse.discordbot.services.UserService;
 import dk.simonsejse.discordbot.utility.Messages;
 import net.dv8tion.jda.api.entities.Message;

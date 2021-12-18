@@ -46,8 +46,9 @@ public class DiscordBotProjectApplication {
 
 		try {
 			jda.awaitReady();
-
-			final CommandListUpdateAction commands = jda.getGuildById("859960986014187560").updateCommands();
+//
+			//859960986014187560
+			final CommandListUpdateAction commands = jda.getGuildById("689226702861369380").updateCommands();
 
 			final List<CommandData> commandsData = commandHandler
 					.getCommands()

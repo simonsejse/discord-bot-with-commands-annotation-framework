@@ -8,8 +8,6 @@ import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
-import java.time.temporal.ChronoUnit;
-
 @Command(
         cmdName = "points",
         cooldown = 5,
@@ -27,7 +25,10 @@ public class PointCommand implements CommandPerform {
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
         long userId = event.getUser().getIdLong();
-        long points = this.userService.getUserByID(userId).orElseThrow(() -> new CommandException("")).getPoints();
+        long points = this.userService.getUserById(userId).orElseThrow(
+                () -> new CommandException(String.format("Brugeren med ID %s findes ikke!", userId))
+        ).getPoints();
+
         event.deferReply().queue(interactionHook -> {
             interactionHook.sendMessage(String.valueOf(points))
                     .queue();

@@ -5,13 +5,14 @@ import lombok.Getter;
 @Getter
 public enum Role {
     MEMBER("member", 1),
-    MOD("mod", 2),
-    STAFF("staff", 3),
-    ADMIN("admin", 4),
-    OWNER("owner", 5);
+    HELPER("helper", 2),
+    MOD("mod", 3),
+    STAFF("staff", 4),
+    ADMIN("admin", 5),
+    OWNER("owner", 6);
 
-    public final String role;
-    public final int priority;
+    private final String role;
+    private final int priority;
 
     Role(String role, int priority) {
         this.role = role;

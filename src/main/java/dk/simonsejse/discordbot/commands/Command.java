@@ -23,4 +23,5 @@ public @interface Command {
     boolean[] isRequired() default {};
 
     Role roleNeeded() default Role.MEMBER;
+    Role[] exclusions() default {};
 }

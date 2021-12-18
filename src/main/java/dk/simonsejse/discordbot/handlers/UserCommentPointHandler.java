@@ -1,7 +1,6 @@
 package dk.simonsejse.discordbot.handlers;
 
 import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
-import dk.simonsejse.discordbot.models.User;
 import dk.simonsejse.discordbot.services.UserService;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +15,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Getter
 @Setter
 @EnableScheduling
-
 public class UserCommentPointHandler {
 
     private ConcurrentLinkedQueue<Long> userCommentPointQueue = new ConcurrentLinkedQueue<>();
