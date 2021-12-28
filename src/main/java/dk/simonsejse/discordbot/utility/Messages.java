@@ -113,12 +113,13 @@ public class Messages {
         Thread awaitEmbeddedFieldsThread = new Thread(() -> {
             for(int i = 0; i < topTenUsers.size(); i++){
                 final User user = topTenUsers.get(i);
-                final long userId = user.getUserId();
+                final long userId = user.getId().getUserId();
+
 
                 net.dv8tion.jda.api.entities.User jdaUserById = jda.retrieveUserById(userId).complete();
 
                 final String title = String.format("%d. %s - %d points", placement.incrementAndGet(), jdaUserById.getAsTag(), user.getPoints());
-                final String idLine = String.format("ID: %s", user.getUserId());
+                final String idLine = String.format("ID: %s", userId);
                 embedBuilder.addField(title, idLine, false);
             }
         });
@@ -283,7 +284,7 @@ public class Messages {
                 .setTitle("Vejr rapport")
                 .setAuthor(location.getName(), "https://www.youtube.com/watch?v=dQw4w9WgXcQ", iconUrl)
                 .setDescription(String.format("%s, %s, %s, latitude %f, longtitude %f, tidszone %s, tidspunkt %s", location.getName(), location.getCountry(), location.getRegion(), location.getLat(), location.getLon(), location.getTzId(), location.getLocaltime()))
-                .addField(new MessageEmbed.Field("Sidst opdateret", current.getLastUpdated(), false))
+                .addField(new MessageEmbed.Field("Sidst opdateret", current.getLastUpdated(), true))
                 .addField(new MessageEmbed.Field("Temperatur (celcius)", String.format("%.2f° C", current.getTempC()), true))
                 .addBlankField(true)
                 .addField(new MessageEmbed.Field("Temperatur (fahrenheit)", String.format("%.2f° F", current.getTempF()), true))

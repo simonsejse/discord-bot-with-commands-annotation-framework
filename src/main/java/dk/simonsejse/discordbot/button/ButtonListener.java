@@ -100,7 +100,7 @@ public class ButtonListener extends ListenerAdapter {
                         event.deferReply(true).queue(interactionHook -> {
                             interactionHook.sendMessage(this.messages.userCreatedInDB(e.getId())).queue();
                         });
-                        this.userService.createNewUserByID(e.getId());
+                        this.userService.createNewUserByID(e.getId(), event.getGuild().getIdLong());
                     }
 
                 }

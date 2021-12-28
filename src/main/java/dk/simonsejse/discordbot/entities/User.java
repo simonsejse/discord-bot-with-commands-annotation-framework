@@ -12,16 +12,34 @@ import java.util.List;
 @Setter
 public class User {
 
-    @Column(name = "user_id")
+    /**
+     * Then it is One user to many reports as reporter and also a second One User to many reports as reported
+     */
+
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "user_id_seq_gen"
+    )
+    @SequenceGenerator(
+            name="user_id_seq_gen",
+            allocationSize = 1
+    )
     @Id
+    @Column(name = "user_id")
     private long userId;
+
+    @Column(name="guild_id")
+    private long guildId;
+
+    @Column(name="jda_user_id")
+    private long jdaUserId;
 
     @Column(name = "user_points")
     private long points;
 
     @OneToMany(
             fetch=FetchType.LAZY,
-            cascade = {CascadeType.PERSIST},
+            cascade = {CascadeType.ALL},
             mappedBy = "reportedUser",
             orphanRemoval = true
     )
@@ -29,14 +47,15 @@ public class User {
 
     @OneToMany(
             fetch=FetchType.LAZY,
-            cascade = {CascadeType.PERSIST},
+            cascade = {CascadeType.ALL},
             mappedBy = "warned",
             orphanRemoval = true
     )
     private List<Warning> warnings;
 
-    public User(long userId){
-        this.userId = userId;
+    public User(long jdaUserId, long guildId){
+        this.jdaUserId = jdaUserId;
+        this.guildId = guildId;
         this.points = 0;
         //this.reports = new ArrayList<>();
     }

@@ -113,11 +113,6 @@ public class CommandHandler extends ListenerAdapter {
                             }
                         });
             });
-        } catch (UserNotFoundException e) {
-            event.deferReply(true).queue(interactionHook -> {
-                interactionHook.sendMessage(this.messages.userCreatedInDB(e.getId())).queue();
-            });
-            this.userService.createNewUserByID(e.getId());
         } catch (UserNoSufficientPermission userNoSufficientPermission) {
             event.deferReply(false).queue(interactionHook -> {
                 interactionHook

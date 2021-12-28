@@ -36,8 +36,8 @@ public class UserService {
         return this.userRepository.getUserByIdFetchWarnings(id);
     }
 
-    public void createNewUserByID(long id) {
-        userRepository.save(new User(id));
+    public void createNewUserByID(long jdaUserId, long guildId) {
+        userRepository.save(new User(jdaUserId, guildId));
     }
 
     public List<User> getTopTenPointUsers() {
@@ -66,11 +66,9 @@ public class UserService {
      * @throws UserNotFoundException If user ID does not exist in DB
      */
     @Transactional
-    public void incrementUserPointByUserId(long id) throws UserNotFoundException {
-        final User user = getUserById(id).orElseThrow(
-                () -> new UserNotFoundException(id)
-        );
-        user.incrementPoint();
+    public void incrementUserPointByUserId(long id) {
+        final Optional<User> user = getUserById(id);
+        user.ifPresent(User::incrementPoint);
     }
 
     /**
@@ -81,7 +79,7 @@ public class UserService {
      * @throws UserNotFoundException If user ID does not exist in DB
      */
     @Transactional
-    public void reportUserById(long id, String reason, long reportedBy) throws UserNotFoundException {
+    public void reportUserById(long id, String reason, User reportedBy) throws UserNotFoundException {
         final User user = getUserByIdFetchReports(id).orElseThrow(
                 () -> new UserNotFoundException(id)
         );

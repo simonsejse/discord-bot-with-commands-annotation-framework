@@ -28,8 +28,9 @@ public class Report {
     @Column(name="when_reported")
     private LocalDateTime whenReported;
 
+    @ManyToOne(fetch=FetchType.LAZY)
     @Column(name="reported_by")
-    private long reportedBy;
+    private User reportedBy;
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "reported_user_id")
@@ -37,7 +38,7 @@ public class Report {
 
     protected Report(){ }
 
-    public Report(String reason, LocalDateTime whenReported, long reportedBy, final User user) {
+    public Report(String reason, LocalDateTime whenReported, User reportedBy, final User user) {
         this.reason = reason;
         this.whenReported = whenReported;
         this.reportedBy = reportedBy;

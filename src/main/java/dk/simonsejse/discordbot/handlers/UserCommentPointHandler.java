@@ -29,12 +29,7 @@ public class UserCommentPointHandler {
     public void continuouslyDequeUsers() {
         if (userCommentPointQueue.size() > 0){
             final long userId = userCommentPointQueue.poll();
-            try {
-                userService.incrementUserPointByUserId(userId);
-            } catch (UserNotFoundException e) {
-                this.userService.createNewUserByID(userId);
-                userCommentPointQueue.add(userId);
-            }
+            userService.incrementUserPointByUserId(userId);
         }
     }
 

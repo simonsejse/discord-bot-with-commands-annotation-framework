@@ -29,7 +29,7 @@ public class SetPointCommand implements CommandPerform {
 
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
-        if (!event.getOptions().isEmpty()){
+      /* if (!event.getOptions().isEmpty()){
             final User targetUser = event.getOptions().get(0).getAsUser();
             final long points = event.getOptions().get(1).getAsLong();
             try {
@@ -46,5 +46,7 @@ public class SetPointCommand implements CommandPerform {
         }else event.deferReply(true).queue(interactionHook -> {
             interactionHook.sendMessage(this.messages.setUserPointsMissingArguments).queue();
         });
+
+       */
     }
 }

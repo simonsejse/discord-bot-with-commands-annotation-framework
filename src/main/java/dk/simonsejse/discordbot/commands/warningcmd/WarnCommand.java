@@ -64,7 +64,7 @@ public class WarnCommand implements CommandPerform {
             event.deferReply(true).queue(interactionHook -> {
                 interactionHook.sendMessage(messages.userCreatedInDB(e.getId())).queue();
             });
-            this.userService.createNewUserByID(e.getId());
+            this.userService.createNewUserByID(e.getId(), event.getGuild().getIdLong());
         }
 
     }

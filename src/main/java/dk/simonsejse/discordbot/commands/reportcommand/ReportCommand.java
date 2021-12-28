@@ -58,7 +58,7 @@ public class ReportCommand implements CommandPerform {
                 event.deferReply(true).queue(interactionHook -> {
                     interactionHook.sendMessage(this.message.userCreatedInDB(e.getId())).queue();
                 });
-                this.userService.createNewUserByID(e.getId());
+                this.userService.createNewUserByID(e.getId(), event.getGuild().getIdLong());
                 throw new CommandException();
             }
 
@@ -82,13 +82,14 @@ public class ReportCommand implements CommandPerform {
             final long reportedUserID = reportedUserJda.getIdLong();
             final String reason = options.get(1).getAsString();
 
+            //todo: null check
             try {
-                this.userService.reportUserById(reportedUserID, reason, event.getUser().getIdLong());
+                this.userService.reportUserById(reportedUserID, reason, userService.getUserById(event.getUser().getIdLong()).get());
             } catch (UserNotFoundException e) {
                 event.deferReply(true).queue(interactionHook -> {
                     interactionHook.sendMessage(this.message.userCreatedInDB(e.getId())).queue();
                 });
-                this.userService.createNewUserByID(e.getId());
+                this.userService.createNewUserByID(e.getId(), event.getGuild().getIdLong());
                 throw new CommandException();
             }
 
