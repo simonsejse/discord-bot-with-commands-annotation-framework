@@ -61,7 +61,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 	}
 
 	//https://discord.com/api/oauth2/authorize?client_id=906719301791268904&permissions=8&scope=bot%20applications.commands
-
+	//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
 	@Override
 	public void onReady(@Nonnull ReadyEvent event) {
 		final CommandListUpdateAction commands = event.getJDA().getGuildById(859960986014187560L).updateCommands();
