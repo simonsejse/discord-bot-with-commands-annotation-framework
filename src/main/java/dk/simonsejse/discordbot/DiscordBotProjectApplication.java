@@ -8,7 +8,6 @@ import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -41,7 +40,9 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 
 	@Bean
 	public JDA jda() throws LoginException {
-		JDABuilder builder = JDABuilder.createDefault(System.getenv("DISCORD_BOT_TOKEN"), GatewayIntent.GUILD_VOICE_STATES);
+		final String discord_bot_token = System.getenv("DISCORD_BOT_TOKEN");
+		System.out.println(discord_bot_token);
+		JDABuilder builder = JDABuilder.createDefault(discord_bot_token, GatewayIntent.GUILD_VOICE_STATES);
 		builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.CLIENT_STATUS, CacheFlag.ACTIVITY, CacheFlag.EMOTE);
 		builder.setBulkDeleteSplittingEnabled(false);
 		builder.setActivity(Activity.watching("Basketball"));
@@ -58,7 +59,8 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 	@Override
 	public void onReady(@Nonnull ReadyEvent event) {
 		//TODO: Remove getGuildById
-		final Guild guildById = event.getJDA().getGuildById(689226702861369380L);
+
+		final JDA jda = event.getJDA();
 		final List<CommandData> commandsData = commandHandler
 				.getCommands()
 				.keySet()
@@ -76,7 +78,9 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 
 		System.out.println(commandsData);
 
-		commandsData.forEach(c -> guildById.upsertCommand(c).queue());
+		commandsData.forEach(c -> {
+			jda.upsertCommand(c).queue();
+		});
 		//commands.queue();
 	}
 
