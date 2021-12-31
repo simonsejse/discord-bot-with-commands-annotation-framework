@@ -40,9 +40,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 
 	@Bean
 	public JDA jda() throws LoginException {
-		final String discord_bot_token = System.getenv("DISCORD_BOT_TOKEN");
-		System.out.println(discord_bot_token);
-		JDABuilder builder = JDABuilder.createDefault(discord_bot_token, GatewayIntent.GUILD_VOICE_STATES);
+		JDABuilder builder = JDABuilder.createDefault(System.getenv("DISCORD_BOT_TOKEN"), GatewayIntent.GUILD_VOICE_STATES);
 		builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.CLIENT_STATUS, CacheFlag.ACTIVITY, CacheFlag.EMOTE);
 		builder.setBulkDeleteSplittingEnabled(false);
 		builder.setActivity(Activity.watching("Basketball"));
