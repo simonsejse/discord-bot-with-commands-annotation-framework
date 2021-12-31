@@ -1,1 +1,1 @@
-Worker: java src\main\java\dk\simonsejse\discordbot\DiscordBotProjectApplication.java
+Worker: java src/main/java/dk/simonsejse/discordbot/DiscordBotProjectApplication.java
