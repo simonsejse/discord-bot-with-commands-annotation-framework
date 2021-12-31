@@ -27,16 +27,16 @@ public class Warning {
     LocalDateTime whenWarned;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="warned")
-    private User warned;
+    @JoinColumn(name="warned_user_id")
+    private AUser warned;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="warned_by")
-    private User warnedBy;
+    @JoinColumn(name="warned_by_user_id")
+    private AUser warnedBy;
 
     protected Warning(){ }
 
-    public Warning(String reason, LocalDateTime whenWarned, User warned, User warnedBy){
+    public Warning(String reason, LocalDateTime whenWarned, AUser warned, AUser warnedBy){
         this.reason = reason;
         this.whenWarned = whenWarned;
         this.warned = warned;

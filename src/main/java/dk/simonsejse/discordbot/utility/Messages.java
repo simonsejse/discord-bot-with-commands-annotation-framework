@@ -2,8 +2,9 @@ package dk.simonsejse.discordbot.utility;
 
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
+import dk.simonsejse.discordbot.dtos.ReportDTO;
+import dk.simonsejse.discordbot.entities.AUser;
 import dk.simonsejse.discordbot.entities.Report;
-import dk.simonsejse.discordbot.entities.User;
 import dk.simonsejse.discordbot.models.mcreq.McResponse;
 import dk.simonsejse.discordbot.models.mcreq.NameHistoryItem;
 import dk.simonsejse.discordbot.models.mcreq.Player;
@@ -36,11 +37,11 @@ public class Messages {
         this.userService = userService;
     }
 
-    public Message getUserReportMessage(List<Report> reports, net.dv8tion.jda.api.entities.User user){
+    public Message getUserReportMessage(List<ReportDTO> reports, net.dv8tion.jda.api.entities.User user){
         final int reportSize = reports.size();
         final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(String.format("Reports på %s", user.getAsTag())).setDescription(String.format("Her kan du se en oversigt over report for %s (%d)", user.getAsTag(), user.getIdLong())).setAuthor(user.getId()).setThumbnail(user.getAvatarUrl()).setColor(Colors.PURPLE).setTimestamp(LocalDateTime.now()).setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").addField(new MessageEmbed.Field("Navn", user.getAsMention(), false)).addField(new MessageEmbed.Field("ID", user.getId(), false)).addField(new MessageEmbed.Field("Antal reports", reportSize + (reportSize >= 7 ? " (HØJT)" : reportSize >= 3 ? " (MEDIUM)" : " (LAV)"), false));
 
-        reports.stream().forEach(report -> {
+        reports.forEach(report -> {
            embedBuilder.addField(
                    new MessageEmbed.Field(
                            String.valueOf(report.getRid()), report.toString()+"\n", false
@@ -100,7 +101,7 @@ public class Messages {
                     .build())
             .build();
 
-    public Message getTopTenLeaderBoards(List<User> topTenUsers, JDA jda) {
+    public Message getTopTenLeaderBoards(List<AUser> topTenUsers, JDA jda) {
         final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle("Top 10 Leaderboards")
                 .setDescription("Her ses leaderboards over de største alfa-heste på serveren!")
                 .setAuthor("Bot Dover")
@@ -112,8 +113,8 @@ public class Messages {
 
         Thread awaitEmbeddedFieldsThread = new Thread(() -> {
             for(int i = 0; i < topTenUsers.size(); i++){
-                final User user = topTenUsers.get(i);
-                final long userId = user.getId().getUserId();
+                final AUser user = topTenUsers.get(i);
+                final long userId = user.getJdaUserID();
 
 
                 net.dv8tion.jda.api.entities.User jdaUserById = jda.retrieveUserById(userId).complete();

@@ -1,6 +1,6 @@
 package dk.simonsejse.discordbot.handlers;
 
-import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
+import dk.simonsejse.discordbot.models.UserIDs;
 import dk.simonsejse.discordbot.services.UserService;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @EnableScheduling
 public class UserCommentPointHandler {
 
-    private ConcurrentLinkedQueue<Long> userCommentPointQueue = new ConcurrentLinkedQueue<>();
+    private ConcurrentLinkedQueue<UserIDs> userCommentPointQueue = new ConcurrentLinkedQueue<>();
     private final UserService userService;
 
     @Autowired
@@ -28,8 +28,8 @@ public class UserCommentPointHandler {
     @Scheduled(fixedRate = 500)
     public void continuouslyDequeUsers() {
         if (userCommentPointQueue.size() > 0){
-            final long userId = userCommentPointQueue.poll();
-            userService.incrementUserPointByUserId(userId);
+            final UserIDs userIDs = userCommentPointQueue.poll();
+            userService.incrementUserPointByUserId(userIDs.getJdaUserID(), userIDs.getGuildID());
         }
     }
 

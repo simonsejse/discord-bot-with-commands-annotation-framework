@@ -56,12 +56,10 @@ public class WeatherInfoCommand implements CommandPerform {
 
                 final WeatherResponse response = mapper.readValue(data, WeatherResponse.class);
                 final Message weatherReport = this.messages.getWeatherReport(response);
-                event.deferReply(true).queue(iHook -> {
+                event.deferReply(false).queue(iHook -> {
                     iHook.sendMessage(weatherReport).queue();
                 });
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -19,7 +19,7 @@ public class Report {
             name = "report_seq_gen",
             allocationSize = 1
     )
-    private int rid;
+    private long rid;
 
     @Column(name="reason")
     private String reason;
@@ -29,24 +29,19 @@ public class Report {
     private LocalDateTime whenReported;
 
     @ManyToOne(fetch=FetchType.LAZY)
-    @Column(name="reported_by")
-    private User reportedBy;
+    @JoinColumn(name="reported_by_user_id")
+    private AUser reportedBy;
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "reported_user_id")
-    private User reportedUser;
+    private AUser reportedUser;
 
     protected Report(){ }
 
-    public Report(String reason, LocalDateTime whenReported, User reportedBy, final User user) {
+    public Report(String reason, LocalDateTime whenReported, AUser reportedBy, final AUser reportedUser) {
         this.reason = reason;
         this.whenReported = whenReported;
         this.reportedBy = reportedBy;
-        this.reportedUser = user;
-    }
-
-    @Override
-    public String toString() {
-        return "RID » " + rid + "\nGrund » "+ reason + "\n" + "Dato » "+whenReported+"\n"+"Reported af » "+reportedBy;
+        this.reportedUser = reportedUser;
     }
 }

@@ -7,14 +7,14 @@ import javax.persistence.Table;
 @Table(name="guilds")
 @Entity
 public class Guild {
-
     @Id
     private final long guildId;
 
-    private long guildOwnerId;
-
-    public Guild(final long guildId, long guildOwnerId){
+    public Guild(final long guildId){
         this.guildId = guildId;
-        this.guildOwnerId = guildOwnerId;
+    }
+
+    public Guild() {
+        this.guildId = 0;
     }
 }

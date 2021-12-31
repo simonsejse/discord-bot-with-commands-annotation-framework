@@ -5,6 +5,7 @@ import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.exceptions.CommandException;
 import dk.simonsejse.discordbot.services.UserService;
 import lombok.AllArgsConstructor;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
@@ -24,10 +25,11 @@ public class PointCommand implements CommandPerform {
 
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
-        long userId = event.getUser().getIdLong();
-        long points = this.userService.getUserById(userId).orElseThrow(
-                () -> new CommandException(String.format("Brugeren med ID %s findes ikke!", userId))
-        ).getPoints();
+        if (event.getGuild() == null) throw new CommandException("Dit guild kunne ikke blive fundet!");
+
+        long jdaUserID = event.getUser().getIdLong();
+        final long guildID = event.getGuild().getIdLong();
+        long points = this.userService.getUserByID(jdaUserID, guildID).getPoints();
 
         event.deferReply().queue(interactionHook -> {
             interactionHook.sendMessage(String.valueOf(points))

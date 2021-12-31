@@ -4,13 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name="user")
 @Getter
 @Setter
-public class User {
+public class AUser {
 
     /**
      * Then it is One user to many reports as reporter and also a second One User to many reports as reported
@@ -26,13 +27,13 @@ public class User {
     )
     @Id
     @Column(name = "user_id")
-    private long userId;
+    private long userID;
 
     @Column(name="guild_id")
-    private long guildId;
+    private long guildID;
 
     @Column(name="jda_user_id")
-    private long jdaUserId;
+    private long jdaUserID;
 
     @Column(name = "user_points")
     private long points;
@@ -53,16 +54,14 @@ public class User {
     )
     private List<Warning> warnings;
 
-    public User(long jdaUserId, long guildId){
-        this.jdaUserId = jdaUserId;
-        this.guildId = guildId;
+    public AUser(long jdaUserID, long guildID){
+        this.jdaUserID = jdaUserID;
+        this.guildID = guildID;
         this.points = 0;
-        //this.reports = new ArrayList<>();
+        this.reports = new ArrayList<>();
     }
 
-    public User(){
-
-    }
+    public AUser(){ }
 
     public void incrementPoint() {
         ++this.points;

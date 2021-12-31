@@ -69,7 +69,7 @@ public class NameInfoCommand implements CommandPerform {
             addFields(embedBuilder, null);
             addFields(embedBuilder, categories);
 
-            event.deferReply(true).queue(iHook -> {
+            event.deferReply(false).queue(iHook -> {
                 iHook.sendMessage(new MessageBuilder().setEmbed(embedBuilder.build()).build()).queue();
             });
         } catch (IOException | NameInfoGetRequestMisMatchException e) {

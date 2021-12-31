@@ -58,9 +58,10 @@ public class CommandHandler extends ListenerAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         final long id = event.getUser().getIdLong();
+        if (event.getUser().getIdLong() == 479363759895216160L) return;
         try{
             //Increment points for each command
-            this.userService.incrementUserPointByUserId(id);
+            this.userService.incrementUserPointByUserId(id, event.getGuild().getIdLong());
 
             final Predicate<Map.Entry<Command, CommandPerform>> containsCommand = (entry) -> entry.getKey().cmdName().equalsIgnoreCase(event.getName());
             final Map.Entry<Command, CommandPerform> commandEntry = this.commands.entrySet()
@@ -75,7 +76,6 @@ public class CommandHandler extends ListenerAdapter {
 
             final Role[] exclusions = commandEntry.getKey().exclusions();
 
-            System.out.println("t"+member.getRoles());
             final Set<String> roles = member.getRoles()
                     .stream()
                     .map(net.dv8tion.jda.api.entities.Role::getName)

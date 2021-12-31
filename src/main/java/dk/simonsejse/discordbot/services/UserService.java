@@ -1,17 +1,13 @@
 package dk.simonsejse.discordbot.services;
 
-import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
-import dk.simonsejse.discordbot.entities.Report;
+import dk.simonsejse.discordbot.entities.AUser;
 import dk.simonsejse.discordbot.models.Role;
-import dk.simonsejse.discordbot.entities.User;
-import dk.simonsejse.discordbot.entities.Warning;
 import dk.simonsejse.discordbot.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.entities.Member;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -24,24 +20,27 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public Optional<User> getUserById(long id) {
-        return this.userRepository.getUserByUserId(id);
+    public AUser getUserByID(long jdaUserID, long guildID) {
+        final Optional<AUser> aUserByJdaUserIDAndGuildID = this.userRepository.getAUserByJdaUserIDAndGuildID(jdaUserID, guildID);
+        return aUserByJdaUserIDAndGuildID.orElseGet(() -> createNewUserByID(jdaUserID, guildID));
     }
 
-    public Optional<User> getUserByIdFetchReports(long id) {
-        return this.userRepository.getUserByIdFetchReports(id);
+    public AUser getUserByJDAUserIDAndGuildIDFetchReports(long jdaUserID, long guildID) {
+        final Optional<AUser> userByJDAUserIDAndGuildIDFetchReports = this.userRepository.getUserByJDAUserIDAndGuildIDFetchReports(jdaUserID, guildID);
+        return userByJDAUserIDAndGuildIDFetchReports.orElseGet(() -> createNewUserByID(jdaUserID, guildID));
     }
 
-    public Optional<User> getUserByIdFetchWarnings(long id) {
-        return this.userRepository.getUserByIdFetchWarnings(id);
+    public AUser getUserByJDAUserIDAndGuildIDFetchWarnings(long jdaUserID, long guildID) {
+        final Optional<AUser> userByJDAUserIDAndGuildIDFetchWarnings = this.userRepository.getUserByJDAUserIDAndGuildIDFetchWarnings(jdaUserID, guildID);
+        return userByJDAUserIDAndGuildIDFetchWarnings.orElseGet(() -> createNewUserByID(jdaUserID, guildID));
     }
 
-    public void createNewUserByID(long jdaUserId, long guildId) {
-        userRepository.save(new User(jdaUserId, guildId));
+    public AUser createNewUserByID(long jdaUserID, long guildID) {
+        return userRepository.saveAndFlush(new AUser(jdaUserID, guildID));
     }
 
-    public List<User> getTopTenPointUsers() {
-        return this.userRepository.findTop10ByOrderByPointsDesc();
+    public List<AUser> getTopTenPointUsers(long guildID) {
+        return this.userRepository.findTop10ByGuildIDOrderByPointsDesc(guildID);
     }
 
 
@@ -60,72 +59,10 @@ public class UserService {
                 .anyMatch(rolesBelowRequiredRole::contains);
     }
 
-    /**
-     *
-     * @param id User id
-     * @throws UserNotFoundException If user ID does not exist in DB
-     */
     @Transactional
-    public void incrementUserPointByUserId(long id) {
-        final Optional<User> user = getUserById(id);
-        user.ifPresent(User::incrementPoint);
-    }
-
-    /**
-     *
-     * @param id User id
-     * @param reason The report reason
-     * @param reportedBy The username of who reported
-     * @throws UserNotFoundException If user ID does not exist in DB
-     */
-    @Transactional
-    public void reportUserById(long id, String reason, User reportedBy) throws UserNotFoundException {
-        final User user = getUserByIdFetchReports(id).orElseThrow(
-                () -> new UserNotFoundException(id)
-        );
-        final Report report = new Report(reason, LocalDateTime.now(), reportedBy, user);
-        user.addReport(report);
-    }
-
-    /**
-     *
-     * @param userId User id
-     * @throws UserNotFoundException If user ID does not exist in DB
-     */
-    @Transactional
-    public void clearAllReportsByUserId(long userId) throws UserNotFoundException {
-        final User user = getUserByIdFetchReports(userId).orElseThrow(
-                () -> new UserNotFoundException(userId)
-        );
-        user.getReports().clear();
-    }
-
-    /**
-     *
-     * @param reportedUserID Reported User id
-     * @return a List<Report> of the Users reports
-     * @throws UserNotFoundException If user ID does not exist in DB
-     */
-    public List<Report> getReportsByUserId(long reportedUserID) throws UserNotFoundException {
-        final User user = getUserByIdFetchReports(reportedUserID).orElseThrow(
-                () -> new UserNotFoundException(reportedUserID)
-        );
-        return user.getReports();
-    }
-
-    @Transactional
-    public void addWarning(net.dv8tion.jda.api.entities.User warnedUser, net.dv8tion.jda.api.entities.User warnedByUser, String reason, LocalDateTime date) throws UserNotFoundException{
-        //TODO: Check if warning is above 3 then ban.
-        final long warnedUserId = warnedUser.getIdLong();
-        final User warned = getUserByIdFetchWarnings(warnedUserId).orElseThrow(
-                () -> new UserNotFoundException(warnedUserId)
-        );
-        final long warnedByUserId = warnedByUser.getIdLong();
-        final User warnedBy = getUserById(warnedByUserId).orElseThrow(
-                () -> new UserNotFoundException(warnedByUserId)
-        );
-
-        warned.addWarning(new Warning(reason, date, warned, warnedBy));
+    public void incrementUserPointByUserId(long id, long guildID) {
+        final AUser AUser = getUserByID(id, guildID);
+        AUser.incrementPoint();
     }
 
 

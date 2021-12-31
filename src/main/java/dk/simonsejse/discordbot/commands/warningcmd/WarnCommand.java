@@ -7,6 +7,7 @@ import dk.simonsejse.discordbot.exceptions.CommandException;
 import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
 import dk.simonsejse.discordbot.models.Role;
 import dk.simonsejse.discordbot.services.UserService;
+import dk.simonsejse.discordbot.services.WarningService;
 import dk.simonsejse.discordbot.utility.Messages;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -27,12 +28,13 @@ import java.time.LocalDateTime;
 )
 public class WarnCommand implements CommandPerform {
 
-
+    private final WarningService warningService;
     private final UserService userService;
     private final Messages messages;
 
     @Autowired
-    public WarnCommand(final UserService userService, Messages messages){
+    public WarnCommand(WarningService warningService, final UserService userService, Messages messages){
+        this.warningService = warningService;
         this.userService = userService;
         this.messages = messages;
     }
@@ -47,15 +49,22 @@ public class WarnCommand implements CommandPerform {
     }
 
     private void performWarnUser(SlashCommandEvent event) throws CommandException {
-        final User warned = event.getOptions().get(0).getAsUser();
-        final User warnedBy = event.getUser();
+        if (event.getGuild() == null) return;
+
+        final User asUser = event.getOptions().get(0).getAsUser();
+        final long warnedUserID = asUser.getIdLong();
+
+        final User warnedByAsUser = event.getUser();
+        final long warnedByUserID = warnedByAsUser.getIdLong();
+
+        final long guildID = event.getGuild().getIdLong();
 
         final String reason = event.getOptions().get(1).getAsString();
 
         try {
             final LocalDateTime now = LocalDateTime.now();
-            this.userService.addWarning(warned, warnedBy, reason, now);
-            final Message message = this.messages.successfullyWarnUser(warned, warnedBy, reason, now);
+            this.warningService.addWarning(guildID, warnedUserID, warnedByUserID, reason, now);
+            final Message message = this.messages.successfullyWarnUser(asUser, warnedByAsUser, reason, now);
             event.deferReply(false).queue(iHook -> {
                 iHook.sendMessage(message)
                         .queue();
@@ -70,7 +79,7 @@ public class WarnCommand implements CommandPerform {
     }
 
     private void performUserViewWarnings(SlashCommandEvent event) throws CommandException {
-
+        event.reply("Works..").queue();
 
 
     }

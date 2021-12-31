@@ -3,8 +3,8 @@ package dk.simonsejse.discordbot.button;
 import dk.simonsejse.discordbot.commands.reportcommand.ReportCommand;
 import dk.simonsejse.discordbot.commands.reportcommand.ReportListener;
 import dk.simonsejse.discordbot.exceptions.GameChallengeNotSent;
-import dk.simonsejse.discordbot.exceptions.UserNotFoundException;
 import dk.simonsejse.discordbot.games.TicTacToeManager;
+import dk.simonsejse.discordbot.services.ReportService;
 import dk.simonsejse.discordbot.services.UserService;
 import dk.simonsejse.discordbot.utility.Messages;
 import net.dv8tion.jda.api.entities.Message;
@@ -15,18 +15,18 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.TimeUnit;
-
 @Component
 public class ButtonListener extends ListenerAdapter {
 
-    public final UserService userService;
-    public final TicTacToeManager ticTacToeManager;
+    private final ReportService reportService;
+    private final UserService userService;
+    private final TicTacToeManager ticTacToeManager;
     private final Messages messages;
     private final ReportListener reportListener;
 
     @Autowired
-    public ButtonListener(final UserService userService, final TicTacToeManager ticTacToeManager, final Messages messages, final ReportListener reportListener){
+    public ButtonListener(ReportService reportService, UserService userService, final TicTacToeManager ticTacToeManager, final Messages messages, final ReportListener reportListener){
+        this.reportService = reportService;
         this.userService = userService;
         this.ticTacToeManager = ticTacToeManager;
         this.messages = messages;
@@ -36,6 +36,7 @@ public class ButtonListener extends ListenerAdapter {
 
     @Override
     public void onButtonClick(@NotNull ButtonClickEvent event) {
+        if (event.getGuild() == null) return;
         final String componentId = event.getComponentId();
         final User user = event.getUser();
        // final Message message = event.getMessage();
@@ -87,21 +88,17 @@ public class ButtonListener extends ListenerAdapter {
                         break;
                     }
                     final User reportedUser = reportListener.retrieveUserById(userId);
-                    try {
-                        final long reportedUserId = reportedUser.getIdLong();
-                        this.userService.clearAllReportsByUserId(reportedUserId);
 
-                        event.deferReply(false)
-                                .queue(iHook -> {
-                                    iHook.sendMessage(String.format("Du har slettet historik for %s!", reportedUser.getAsTag()))
-                                            .queue();
-                                });
-                    } catch (UserNotFoundException e) {
-                        event.deferReply(true).queue(interactionHook -> {
-                            interactionHook.sendMessage(this.messages.userCreatedInDB(e.getId())).queue();
-                        });
-                        this.userService.createNewUserByID(e.getId(), event.getGuild().getIdLong());
-                    }
+                    final long reportedUserId = reportedUser.getIdLong();
+                    final long guildID = event.getGuild().getIdLong();
+                    this.reportService.clearAllReportsByUserId(reportedUserId, guildID);
+
+                    event.deferReply(false)
+                            .queue(iHook -> {
+                                iHook.sendMessage(String.format("Du har slettet historik for %s!", reportedUser.getAsTag()))
+                                        .queue();
+                            });
+
 
                 }
             default:

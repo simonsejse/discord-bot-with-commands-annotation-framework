@@ -31,8 +31,6 @@ import java.time.temporal.ChronoUnit;
         parameterDescriptions = {"spillerens minecraft navn"},
         types = {OptionType.STRING},
         isRequired = {true}
-
-
 )
 public class McInfoCommand implements CommandPerform {
 

@@ -4,6 +4,7 @@ import dk.simonsejse.discordbot.button.ButtonListener;
 import dk.simonsejse.discordbot.chat.ChatHandler;
 import dk.simonsejse.discordbot.commands.CommandHandler;
 import dk.simonsejse.discordbot.repositories.GuildRepository;
+import dk.simonsejse.discordbot.services.ReportService;
 import dk.simonsejse.discordbot.utility.DateFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,17 +12,20 @@ import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
@@ -33,7 +37,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DiscordBotProjectApplication extends ListenerAdapter {
 
-
 	private final CommandHandler commandHandler;
 	private final ButtonListener buttonListener;
 	private final ChatHandler chatHandler;
@@ -44,14 +47,13 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 
 	@Bean
 	public JDA jda() throws LoginException {
-		JDABuilder builder = JDABuilder.createDefault(TokenUtil.TOKEN);
-		builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE);
+		JDABuilder builder = JDABuilder.createDefault(TokenUtil.TOKEN, GatewayIntent.GUILD_VOICE_STATES);
+		builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.CLIENT_STATUS, CacheFlag.ACTIVITY, CacheFlag.EMOTE);
 		builder.setBulkDeleteSplittingEnabled(false);
 		builder.setActivity(Activity.watching("Basketball"));
-		builder.addEventListeners(commandHandler, buttonListener, chatHandler);
-
-		JDA jda = builder.build();
-		return jda;
+		builder.addEventListeners(commandHandler, buttonListener, chatHandler, this);
+		builder.enableCache(CacheFlag.VOICE_STATE);
+		return builder.build();
 	}
 
 	@Override
@@ -59,13 +61,10 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 		System.out.println("It joined");
 
 	}
-
-	//https://discord.com/api/oauth2/authorize?client_id=906719301791268904&permissions=8&scope=bot%20applications.commands
-	//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
 	@Override
 	public void onReady(@Nonnull ReadyEvent event) {
-		final CommandListUpdateAction commands = event.getJDA().getGuildById(859960986014187560L).updateCommands();
-
+		//TODO: Remove getGuildById
+		final Guild guildById = event.getJDA().getGuildById(689226702861369380L);
 		final List<CommandData> commandsData = commandHandler
 				.getCommands()
 				.keySet()
@@ -81,10 +80,10 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 					return commandData;
 				}).collect(Collectors.toList());
 
+		System.out.println(commandsData);
 
-		commands.addCommands(commandsData);
-
-		commands.queue();
+		commandsData.forEach(c -> guildById.upsertCommand(c).queue());
+		//commands.queue();
 	}
 
 }
