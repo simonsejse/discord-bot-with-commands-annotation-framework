@@ -3,12 +3,8 @@ package dk.simonsejse.discordbot;
 import dk.simonsejse.discordbot.button.ButtonListener;
 import dk.simonsejse.discordbot.chat.ChatHandler;
 import dk.simonsejse.discordbot.commands.CommandHandler;
-import dk.simonsejse.discordbot.repositories.GuildRepository;
-import dk.simonsejse.discordbot.services.ReportService;
-import dk.simonsejse.discordbot.utility.DateFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -19,13 +15,11 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
@@ -47,7 +41,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 
 	@Bean
 	public JDA jda() throws LoginException {
-		JDABuilder builder = JDABuilder.createDefault(TokenUtil.TOKEN, GatewayIntent.GUILD_VOICE_STATES);
+		JDABuilder builder = JDABuilder.createDefault(System.getenv("DISCORD_BOT_TOKEN"), GatewayIntent.GUILD_VOICE_STATES);
 		builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.CLIENT_STATUS, CacheFlag.ACTIVITY, CacheFlag.EMOTE);
 		builder.setBulkDeleteSplittingEnabled(false);
 		builder.setActivity(Activity.watching("Basketball"));

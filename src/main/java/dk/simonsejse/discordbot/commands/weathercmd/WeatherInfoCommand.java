@@ -1,7 +1,6 @@
 package dk.simonsejse.discordbot.commands.weathercmd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.simonsejse.discordbot.TokenUtil;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.exceptions.CommandException;
@@ -15,9 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLStreamHandler;
 import java.time.temporal.ChronoUnit;
 
 @Command(
@@ -33,7 +30,7 @@ import java.time.temporal.ChronoUnit;
 )
 public class WeatherInfoCommand implements CommandPerform {
 
-    private static final String BASE_URL = String.format("http://api.weatherapi.com/v1/current.json?key=%s&", TokenUtil.WEATHER_TOKEN);
+    private static final String BASE_URL = String.format("http://api.weatherapi.com/v1/current.json?key=%s&", System.getenv("WEATHER_API_TOKEN"));
 
     private final Messages messages;
 
