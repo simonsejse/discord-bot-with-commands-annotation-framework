@@ -1,1 +1,1 @@
-Worker: java -Dserver.port=$PORT $JAVA_OPTS -jar target/discordbot-0.0.1-SNAPSHOT.jar
+Worker: java -jar /tmp/build_30fa4029/target/discordbot-0.0.1-SNAPSHOT.jar
