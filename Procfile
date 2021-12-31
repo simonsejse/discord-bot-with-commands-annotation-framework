@@ -1,0 +1,1 @@
+Worker: java target/discordbot-0.0.1-SNAPSHOT.jar
