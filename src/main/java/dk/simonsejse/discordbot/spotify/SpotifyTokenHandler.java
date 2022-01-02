@@ -33,7 +33,7 @@ public class SpotifyTokenHandler {
     @Bean
     public void generateTokenOnStart(){
         LOGGER.info("Trying to create Spotify API token");
-        
+
     }
 
 }
