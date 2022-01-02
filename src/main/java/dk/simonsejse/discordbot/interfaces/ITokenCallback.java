@@ -1,9 +1,9 @@
 package dk.simonsejse.discordbot.interfaces;
 
-import dk.simonsejse.discordbot.errors.BadRequestException;
-import dk.simonsejse.discordbot.spotify.OkTokenRequest;
+import dk.simonsejse.discordbot.spotify.errors.SpotifyBadRequestException;
+import dk.simonsejse.discordbot.spotify.models.OkTokenRequest;
 
 public interface ITokenCallback {
     void success(OkTokenRequest token);
-    void failure(BadRequestException error);
+    void failure(SpotifyBadRequestException error);
 }
