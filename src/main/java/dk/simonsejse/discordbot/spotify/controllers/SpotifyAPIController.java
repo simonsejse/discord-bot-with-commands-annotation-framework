@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.simonsejse.discordbot.spotify.SpotifyTokenHandler;
 import dk.simonsejse.discordbot.spotify.errors.SpotifyBadRequestException;
 import dk.simonsejse.discordbot.interfaces.ISongCallback;
-import dk.simonsejse.discordbot.interfaces.ITokenCallback;
+import dk.simonsejse.discordbot.spotify.ex.TokenCouldNotBeRetrievedException;
 import dk.simonsejse.discordbot.spotify.models.OkTokenRequest;
 import dk.simonsejse.discordbot.spotify.SpotifyHttpManager;
 import dk.simonsejse.discordbot.spotify.models.SpotifyTrackInfoData;
@@ -42,7 +42,7 @@ public class SpotifyAPIController {
         this.spotifyTokenHandler = spotifyTokenHandler;
     }
 
-    private void getAccessToken(ITokenCallback callback) throws URISyntaxException, IOException {
+    public OkTokenRequest getAccessToken() throws TokenCouldNotBeRetrievedException, URISyntaxException, IOException {
         final Response post = spotifyHttpManager.post(
                 new URI(TOKEN_URL),
                 this.spotifyHttpManager.createHeaders(
@@ -55,53 +55,35 @@ public class SpotifyAPIController {
         final ResponseBody body = post.body();
         assert body != null;
         if (post.code() == HttpStatus.SC_OK){
-            final OkTokenRequest okTokenRequest = mapper.readValue(body.bytes(), OkTokenRequest.class);
-            System.out.println(okTokenRequest.getAccessToken());
-            callback.success(okTokenRequest);
+            return mapper.readValue(body.bytes(), OkTokenRequest.class);
         }else {
             final SpotifyBadRequestException spotifyBadRequestException = mapper.readValue(body.bytes(), SpotifyBadRequestException.class);
-            callback.failure(spotifyBadRequestException);
+            throw new TokenCouldNotBeRetrievedException(spotifyBadRequestException);
         }
     }
 
     public void getSongNameByTrackURL(String token, String trackID, ISongCallback callback) throws IOException, URISyntaxException {
-        if (token != null){
-            final Response response = this.spotifyHttpManager.get(
-                    new URI(String.format("%s/tracks/%s", BASE_URL, trackID)),
-                    this.spotifyHttpManager.createHeaders(
-                            new DefaultKeyValue<>("Authorization", "Bearer " + token)
-                    )
-            );
 
+        final Response response = this.spotifyHttpManager.get(
+                new URI(String.format("%s/tracks/%s", BASE_URL, trackID)),
+                this.spotifyHttpManager.createHeaders(
+                        new DefaultKeyValue<>("Authorization", "Bearer " + token)
+                )
+        );
 
-            final int code = response.code();
-            final ResponseBody body = response.body();
-            switch(code){
-                case HttpStatus.SC_OK:
-                    final SpotifyTrackInfoData spotifyTrackInfoData = mapper.readValue(body.bytes(), SpotifyTrackInfoData.class);
-                    callback.success(spotifyTrackInfoData);
-                    break;
-                case HttpStatus.SC_UNAUTHORIZED:
-                    System.out.println("ask for new token using the token?? O_o");
-                    callback.failure(code, body.string(), true);
-                    break;
-            }
-            response.close();
-        }else {
-            getAccessToken(new ITokenCallback() {
-                @Override
-                public void success(OkTokenRequest tokenReq) {
-                    spotifyTokenHandler.setToken(tokenReq.getAccessToken());
-                }
-
-                @Override
-                public void failure(SpotifyBadRequestException error) {
-                    boolean isNull = error.getError() == null;
-                    callback.failure(isNull ? 401 : error.getError().getCode(), isNull ? error.getErrorMessage() : error.getError().getMessage(), false);
-                }
-            });
-            getSongNameByTrackURL(spotifyTokenHandler.getToken(), trackID, callback);
+        final int code = response.code();
+        final ResponseBody body = response.body();
+        switch (code) {
+            case HttpStatus.SC_OK:
+                final SpotifyTrackInfoData spotifyTrackInfoData = mapper.readValue(body.bytes(), SpotifyTrackInfoData.class);
+                callback.success(spotifyTrackInfoData);
+                break;
+            case HttpStatus.SC_UNAUTHORIZED:
+                System.out.println("ask for new token using the token?? O_o");
+                callback.failure(code, body.string(), true);
+                break;
         }
+        response.close();
 
     }
 
