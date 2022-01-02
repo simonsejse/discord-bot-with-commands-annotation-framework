@@ -63,7 +63,10 @@ public class NameInfoCommand implements CommandPerform {
                 final Elements thElements = element.select("th");
                 thElements.stream().map(Element::text).forEach(titles::add);
                 final Elements tdElements = element.select("td");
-                tdElements.stream().map(Element::text).forEach(categories::add);
+                tdElements.stream().map(Element::text).forEach(text -> {
+                    if (text.contains("-")) text = text + " kradset";
+                    categories.add(text);
+                });
             });
             addFields(embedBuilder, titles);
             addFields(embedBuilder, null);

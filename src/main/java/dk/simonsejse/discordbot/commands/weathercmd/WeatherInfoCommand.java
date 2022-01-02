@@ -51,6 +51,7 @@ public class WeatherInfoCommand implements CommandPerform {
                 final String data = new String(inputStream.readAllBytes());
                 final ObjectMapper mapper = new ObjectMapper();
 
+
                 final WeatherResponse response = mapper.readValue(data, WeatherResponse.class);
                 final Message weatherReport = this.messages.getWeatherReport(response);
                 event.deferReply(false).queue(iHook -> {

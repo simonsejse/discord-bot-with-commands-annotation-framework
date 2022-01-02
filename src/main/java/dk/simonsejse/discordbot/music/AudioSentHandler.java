@@ -9,20 +9,22 @@ import java.nio.ByteBuffer;
 
 
 public class AudioSentHandler implements AudioSendHandler {
+    private static final int BUFFER_SIZE = 1024;
+
     private final AudioPlayer audioPlayer;
     private final ByteBuffer buffer;
-    private final MutableAudioFrame lastFrame;
+    private final MutableAudioFrame audioFrame;
 
     public AudioSentHandler(AudioPlayer audioPlayer) {
         this.audioPlayer = audioPlayer;
-        this.buffer = ByteBuffer.allocate(2024);
-        this.lastFrame = new MutableAudioFrame();
-        this.lastFrame.setBuffer(this.buffer);
+        this.audioFrame = new MutableAudioFrame();
+        this.buffer = ByteBuffer.allocate(BUFFER_SIZE);
+        this.audioFrame.setBuffer(this.buffer);
     }
 
     @Override
     public boolean canProvide() {
-        return this.audioPlayer.provide(this.lastFrame);
+        return this.audioPlayer.provide(this.audioFrame);
     }
 
     @Nullable

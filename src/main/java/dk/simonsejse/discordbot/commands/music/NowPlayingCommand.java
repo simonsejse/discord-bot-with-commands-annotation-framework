@@ -5,7 +5,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import dk.simonsejse.discordbot.commands.Command;
 import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.exceptions.CommandException;
-import dk.simonsejse.discordbot.models.mcreq.Player;
 import dk.simonsejse.discordbot.music.GuildMusicManager;
 import dk.simonsejse.discordbot.music.PlayerManager;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;

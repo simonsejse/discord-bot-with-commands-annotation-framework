@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -18,17 +17,17 @@ import java.net.URL;
 @Command(
         cmdName = "afspil",
         info = "En kommando til at afspille musik!",
-        types = {OptionType.STRING},
-        parameterNames = {"url"},
-        parameterDescriptions = {"link til din sang"},
-        isRequired = {true}
+        types = {OptionType.STRING, OptionType.BOOLEAN},
+        parameterNames = {"url", "album"},
+        parameterDescriptions = {"link til din sang", "spil sangen eller hele albummet"},
+        isRequired = {true, false}
 )
 public class PlayCommand implements CommandPerform {
 
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
         if (event.getMember() == null) throw new CommandException("Spilleren kunne ikke findes!");
-        if (event.getMember().getVoiceState() == null && !event.getMember().getVoiceState().inVoiceChannel()) throw new CommandException("Spilleren er ikke i en tale kanal!");
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inVoiceChannel()) throw new CommandException("Du skal være i en tale kanal for at kunne afspille musik.");
         if (event.getGuild() == null) throw new CommandException("Spilleren er ikke i noget guild!");
 
         String trackURL = event.getOptions().get(0).getAsString();
@@ -40,7 +39,7 @@ public class PlayCommand implements CommandPerform {
         if (checkIfIsSearch(trackURL))
             trackURL = String.format("ytsearch:%s", trackURL);
 
-        PlayerManager.getPlayerManager().loadAndPlay(event.getTextChannel(), trackURL, (message -> {
+        PlayerManager.getPlayerManager().loadAndPlay(event.getGuild(), event.getUser(), trackURL, (message -> {
             event.deferReply(false).queue(iHook -> {
                 iHook.sendMessage(message).queue();
             });

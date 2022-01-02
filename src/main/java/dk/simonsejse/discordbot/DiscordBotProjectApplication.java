@@ -8,6 +8,7 @@ import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -59,7 +60,9 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 	public void onReady(@Nonnull ReadyEvent event) {
 		//TODO: Remove getGuildById
 
-		final JDA jda = event.getJDA();
+		//final JDA jda = event.getJDA(); use jda.upsertCommand() l8 on
+		final Guild guild = event.getJDA().getGuildById(689226702861369380L);
+
 		final List<CommandData> commandsData = commandHandler
 				.getCommands()
 				.keySet()
@@ -78,7 +81,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 		System.out.println(commandsData);
 
 		commandsData.forEach(c -> {
-			jda.upsertCommand(c).queue();
+			guild.upsertCommand(c).queue();
 		});
 		//commands.queue();
 	}

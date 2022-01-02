@@ -20,7 +20,7 @@ public class StopCommand implements CommandPerform {
     @Override
     public void perform(SlashCommandEvent event) throws CommandException {
         if (event.getMember() == null) throw new CommandException("Spilleren kunne ikke findes!");
-        if (event.getMember().getVoiceState() == null && !event.getMember().getVoiceState().inVoiceChannel()) throw new CommandException("Spilleren er ikke i en tale kanal!");
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inVoiceChannel()) throw new CommandException("Spilleren er ikke i en tale kanal!");
         if (event.getGuild() == null) throw new CommandException("Spilleren er ikke i noget guild!");
 
         final GuildMusicManager musicManagerByGuildId = PlayerManager.getPlayerManager().getMusicManagerByGuildId(event.getGuild());
