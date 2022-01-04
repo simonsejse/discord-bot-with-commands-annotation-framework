@@ -100,7 +100,7 @@ public class CommandHandler extends ListenerAdapter {
 
         }catch(CommandException e){
             if (e.getMessage() == null) return;
-            event.deferReply(true).queue(interactionHook -> {
+            event.deferReply(e.isDeferReply()).queue(interactionHook -> {
                 interactionHook.sendMessage(e.getMessage()).queue();
             });
         }catch(CommandCooldownNotExpired e){

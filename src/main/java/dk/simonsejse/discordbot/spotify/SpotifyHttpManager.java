@@ -6,6 +6,7 @@ import org.apache.commons.collections4.KeyValue;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Arrays;
 
@@ -17,10 +18,8 @@ public class SpotifyHttpManager implements IHttpManager {
         this.client = new OkHttpClient();
     }
 
-
     @Override
     public Response get(URI uri, Headers headers) throws IOException {
-        if (uri == null) throw new IOException("URI cannot be null");
 
         Request request = new Request.Builder()
                 .url(uri.toURL())
@@ -33,8 +32,6 @@ public class SpotifyHttpManager implements IHttpManager {
 
     @Override
     public Response post(URI uri, Headers headers, RequestBody body) throws IOException {
-        if (uri == null) throw new IOException("URI cannot be null");
-
         Request request = new Request.Builder()
                 .url(uri.toURL())
                 .headers(headers)

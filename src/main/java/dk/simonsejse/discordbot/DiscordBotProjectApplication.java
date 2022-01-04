@@ -3,6 +3,7 @@ package dk.simonsejse.discordbot;
 import dk.simonsejse.discordbot.button.ButtonListener;
 import dk.simonsejse.discordbot.chat.ChatHandler;
 import dk.simonsejse.discordbot.commands.CommandHandler;
+import dk.simonsejse.discordbot.spotify.SpotifyURLConfiguration;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
@@ -16,21 +17,26 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Getter
 @SpringBootApplication
 @AllArgsConstructor
+@EnableConfigurationProperties(SpotifyURLConfiguration.class)
 public class DiscordBotProjectApplication extends ListenerAdapter {
 
+	private final Logger log = Logger.getLogger(DiscordBotProjectApplication.class.getName());
 	private final CommandHandler commandHandler;
 	private final ButtonListener buttonListener;
 	private final ChatHandler chatHandler;
@@ -78,7 +84,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 					return commandData;
 				}).collect(Collectors.toList());
 
-		System.out.println(commandsData);
+		log.info(String.format("Registrering %d commands!", commandsData.size()));
 
 		commandsData.forEach(c -> {
 			guild.upsertCommand(c).queue();

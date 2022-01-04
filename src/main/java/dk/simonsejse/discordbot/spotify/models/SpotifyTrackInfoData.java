@@ -11,8 +11,13 @@ import java.util.Set;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotifyTrackInfoData {
+    @JsonProperty(value = "id")
+    private String id;
     @JsonProperty(value = "name")
     private String name;
+    @JsonProperty(value = "popularity")
+    private int popularity;
+
     @JsonProperty(value = "artists")
     private Set<SpotifyArtists> spotifyArtists;
 }
