@@ -1,10 +1,12 @@
 package dk.simonsejse.discordbot.utility;
 
 import dk.simonsejse.discordbot.commands.Command;
+import dk.simonsejse.discordbot.commands.CommandPerform;
 import dk.simonsejse.discordbot.commands.infocmd.InfoCommand;
 import dk.simonsejse.discordbot.dtos.ReportDTO;
 import dk.simonsejse.discordbot.entities.AUser;
 import dk.simonsejse.discordbot.entities.Report;
+import dk.simonsejse.discordbot.models.Role;
 import dk.simonsejse.discordbot.models.mcreq.McResponse;
 import dk.simonsejse.discordbot.models.mcreq.NameHistoryItem;
 import dk.simonsejse.discordbot.models.mcreq.Player;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Component;
 import java.awt.*;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -281,7 +284,7 @@ public class Messages {
         // Needs to remove the two // at start and add https://
         final String iconUrl = String.format("https://%s", condition.getIcon().substring(2));
 
-        return new MessageBuilder().setEmbed(new EmbedBuilder()
+        EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setTitle("Vejr rapport")
                 .setAuthor(location.getName(), "https://www.youtube.com/watch?v=dQw4w9WgXcQ", iconUrl)
                 .setDescription(String.format("%s, %s, %s, latitude %f, longtitude %f, tidszone %s, tidspunkt %s", location.getName(), location.getCountry(), location.getRegion(), location.getLat(), location.getLon(), location.getTzId(), location.getLocaltime()))
@@ -314,7 +317,41 @@ public class Messages {
                 .setThumbnail(iconUrl)
                 .setColor(Colors.PINK)
                 .setTimestamp(LocalDateTime.now())
-                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256").build())
-                .build();
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256");
+        return new MessageBuilder().setEmbed(embedBuilder.build()).build();
+    }
+
+    public Message listAllCommands(List<CommandPerform> commandsList) {
+        final EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setTitle("Kommandoer Info")
+                .setDescription("Liste over alle kommandoer Bot Dover kan udføre, kategoriseret ved ranksne som har tilladdelse til kommandoerne og derop af!");
+
+        Map<Role, List<Command>> categorizeCommands = new TreeMap<>(Comparator.comparingInt(Role::getPriority));
+
+        for (CommandPerform commandPerform : commandsList) {
+            Command command = commandPerform.getClass().getAnnotation(Command.class);
+            categorizeCommands.compute(command.roleNeeded(), (role, commandPerformList) -> {
+                if (commandPerformList == null) commandPerformList = new ArrayList<>();
+                commandPerformList.add(command);
+                return commandPerformList;
+            });
+        }
+        for(Map.Entry<Role, List<Command>> entry : categorizeCommands.entrySet()){
+            final StringBuilder commands = new StringBuilder();
+            commands.append("```");
+            entry.getValue().forEach(command -> {
+                commands.append("/").append(command.cmdName()).append("\n");
+            });
+            commands.append("```");
+
+            embedBuilder.addField(entry.getKey().getRole(), commands.toString(), true);
+        }
+
+        embedBuilder.setThumbnail("https://media4.giphy.com/media/l3978y5HqiEtqupiM/giphy.gif")
+                .setColor(Colors.PINK)
+                .setTimestamp(LocalDateTime.now())
+                .setFooter("Bot Dover", "https://cdn.discordapp.com/app-icons/906719301791268904/c2642069744073d0d700d0e79a1722d8.png?size=256");
+
+        return new MessageBuilder().setEmbed(embedBuilder.build()).build();
     }
 }

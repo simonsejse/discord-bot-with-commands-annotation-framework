@@ -5,11 +5,12 @@ import lombok.Getter;
 @Getter
 public enum Role {
     MEMBER("member", 1),
-    HELPER("helper", 2),
-    MOD("mod", 3),
-    STAFF("staff", 4),
-    ADMIN("admin", 5),
-    OWNER("owner", 6);
+    HELPER("thicc", 2),
+    MOD("london", 3),
+    STAFF("bassboosted", 4),
+    ADMIN("jøden", 5),
+    JEPPE("carboneret citrus vand", 6),
+    OWNER("penis", 7);
 
     private final String role;
     private final int priority;

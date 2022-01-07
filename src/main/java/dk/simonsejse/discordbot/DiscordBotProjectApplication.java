@@ -67,7 +67,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 		//TODO: Remove getGuildById
 
 		//final JDA jda = event.getJDA(); use jda.upsertCommand() l8 on
-		final Guild guild = event.getJDA().getGuildById(689226702861369380L);
+		final Guild guild = event.getJDA().getGuildById(421395521094287360L);
 
 		final List<CommandData> commandsData = commandHandler
 				.getCommands()

@@ -48,6 +48,7 @@ public class UserService {
         final Set<String> rolesBelowRequiredRole = Arrays.stream(Role.values())
                 .filter(role -> role.getPriority() > requiredRole.getPriority())
                 .map(Role::getRole)
+                .map(String::toLowerCase)
                 .collect(Collectors.toSet());
 
         rolesBelowRequiredRole.add(requiredRole.getRole());
@@ -56,6 +57,7 @@ public class UserService {
         //If member == null -> return false then we do want to check other expression and it will
         return member == null || member.getRoles().stream()
                 .map(net.dv8tion.jda.api.entities.Role::getName)
+                .map(String::toLowerCase)
                 .anyMatch(rolesBelowRequiredRole::contains);
     }
 

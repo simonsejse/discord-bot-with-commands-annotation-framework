@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toSet;
@@ -31,6 +32,7 @@ import static java.util.stream.Collectors.toSet;
 @Getter
 public class CommandHandler extends ListenerAdapter {
 
+    private static final Logger log = Logger.getLogger(CommandHandler.class.getName());
     private Map<Command, CommandPerform> commands;
 
     //DI
@@ -79,20 +81,21 @@ public class CommandHandler extends ListenerAdapter {
             final Set<String> roles = member.getRoles()
                     .stream()
                     .map(net.dv8tion.jda.api.entities.Role::getName)
+                    .map(String::toLowerCase)
                     .collect(toSet());
-
 
             final boolean isExcluded = Arrays.stream(exclusions)
                     .map(Role::getRole)
+                    .map(String::toLowerCase)
                     .anyMatch(roles::contains);
 
 
-            if (!(event.getUser().getIdLong() == 292418783547490314L) && !isExcluded && !this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())) {
+            if (!isExcluded && !this.cooldownManager.hasCooldownExpired(id, commandEntry.getKey())) {
                 final String cooldownOnCommand = this.cooldownManager.getCooldown(id, commandEntry.getKey());
                 throw new CommandCooldownNotExpired(cooldownOnCommand);
             }
 
-            if (!(event.getUser().getIdLong() == 292418783547490314L) && !isExcluded && !userService.doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded()))
+            if (!isExcluded && !userService.doesMemberHaveSufficientRole(member, commandEntry.getKey().roleNeeded()))
                 throw new UserNoSufficientPermission();
 
             this.cooldownManager.addCooldown(id, commandEntry.getKey());

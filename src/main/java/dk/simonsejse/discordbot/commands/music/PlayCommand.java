@@ -7,7 +7,6 @@ import dk.simonsejse.discordbot.exceptions.CommandException;
 import dk.simonsejse.discordbot.music.PlayerManager;
 import dk.simonsejse.discordbot.spotify.controllers.SpotifyAPIManager;
 import dk.simonsejse.discordbot.spotify.ex.SpotifyServiceUnavailableException;
-import dk.simonsejse.discordbot.spotify.ex.SpotifySongByTrackIDNotFoundException;
 import dk.simonsejse.discordbot.spotify.models.SpotifyArtists;
 import dk.simonsejse.discordbot.spotify.models.SpotifyTrackInfoData;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -20,8 +19,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 
@@ -66,13 +63,9 @@ public class PlayCommand implements CommandPerform {
                 trackURL = songNameByTrackURL.getName() + " af ";
                 String by = String.join(",", songNameByTrackURL.getSpotifyArtists().stream().map(SpotifyArtists::getArtistName).collect(Collectors.toSet()));
                 trackURL = trackURL + by;
-            } catch (IOException e) {
-                javaMailService.addErrorLog(e.getMessage());
-                throw new CommandException("Det gik helt galt.. Prøv igen eller hvis det fortsætter bed Simon om at tjekke hans mail!");
-            } catch (SpotifySongByTrackIDNotFoundException e) {
-                throw new CommandException(String.format("Sangen med ID %s kunne ikke blive fundet!", spotifyID));
             } catch (SpotifyServiceUnavailableException e) {
-                throw new CommandException("Noget er galt med spotify's access token, kontakt SimonWin!");
+                javaMailService.addErrorLog(e.getMessage());
+                throw new CommandException("Noget er galt med spotify's access token, kontakt SimonWin!\n Fejlbesked er " + e.getMessage());
             }
         }
 

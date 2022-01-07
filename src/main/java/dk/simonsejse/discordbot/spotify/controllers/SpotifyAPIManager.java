@@ -1,19 +1,15 @@
 package dk.simonsejse.discordbot.spotify.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.simonsejse.discordbot.exceptions.ResponseFetchException;
 import dk.simonsejse.discordbot.spotify.SpotifyHttpManager;
 import dk.simonsejse.discordbot.spotify.SpotifyURLConfiguration;
 import dk.simonsejse.discordbot.spotify.TokenHandler;
 import dk.simonsejse.discordbot.spotify.ex.SpotifyServiceUnavailableException;
-import dk.simonsejse.discordbot.spotify.ex.SpotifySongByTrackIDNotFoundException;
 import dk.simonsejse.discordbot.spotify.models.SpotifyAccessToken;
 import dk.simonsejse.discordbot.spotify.models.SpotifyTrackInfoData;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
-import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -36,26 +32,23 @@ public class SpotifyAPIManager {
     }
 
 
-    public SpotifyTrackInfoData getSongNameByTrackURL(String trackID) throws IOException, SpotifySongByTrackIDNotFoundException, SpotifyServiceUnavailableException {
+    public SpotifyTrackInfoData getSongNameByTrackURL(String trackID) throws SpotifyServiceUnavailableException {
         String newPath = String.format("%s/tracks/%s", urlConfiguration.getBaseUrl().getPath(), trackID);
         log.info(String.format("Sending get request to %s", newPath));
         final SpotifyAccessToken spotifyAccessToken = tokenHandler.getSpotifyAccessToken();
 
-        final Response response = this.spotifyHttpManager.get(
-                urlConfiguration.getBaseUrl().resolve(newPath),
-                this.spotifyHttpManager.createHeaders(
-                        new DefaultKeyValue<>("Authorization", String.format("%s %s", spotifyAccessToken.getTokenType(), spotifyAccessToken.getAccessToken()))
-                )
-        );
+        try {
+            String response = this.spotifyHttpManager.get(
+                    urlConfiguration.getBaseUrl().resolve(newPath),
+                    this.spotifyHttpManager.createHeaders(
+                            new DefaultKeyValue<>("Authorization", String.format("%s %s", spotifyAccessToken.getTokenType(), spotifyAccessToken.getAccessToken()))
+                    )
+            );
+            log.info(String.format("Requesting Body for song with id '%s' has body %s", trackID, response));
 
-        final int code = response.code();
-        final String string = response.body().string();
-        log.info(String.format("Requesting Body for song with id '%s' has body %s", trackID, string));
-        switch (code) {
-            case HttpStatus.SC_OK:
-                return mapper.readValue(string, SpotifyTrackInfoData.class);
-            default:
-                throw new SpotifySongByTrackIDNotFoundException();
+            return mapper.readValue(response, SpotifyTrackInfoData.class);
+        } catch (IOException | ResponseFetchException exception) {
+            throw new SpotifyServiceUnavailableException(exception.getMessage());
         }
 
     }
