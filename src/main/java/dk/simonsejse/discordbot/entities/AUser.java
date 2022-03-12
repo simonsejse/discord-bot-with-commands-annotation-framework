@@ -4,8 +4,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Entity
 @Table(name="user")
@@ -54,6 +58,14 @@ public class AUser {
     )
     private List<Warning> warnings;
 
+    @OneToMany(
+            fetch = FetchType.LAZY,
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Reputation> reputations;
+
     public AUser(long jdaUserID, long guildID){
         this.jdaUserID = jdaUserID;
         this.guildID = guildID;
@@ -62,6 +74,13 @@ public class AUser {
     }
 
     public AUser(){ }
+
+    public boolean hasUserGivenWithin24Hours(AUser user){
+        final Optional<Reputation> any =
+                reputations.stream().filter(rep -> rep.getUser().equals(user)).findAny();
+        return any.isPresent() && Duration.between(any.get().getWhenGiven(), LocalDateTime.now()).toHours() >= 24;
+
+    }
 
     public void incrementPoint() {
         ++this.points;
@@ -81,5 +100,19 @@ public class AUser {
 
     public void addWarning(Warning warning) {
         this.warnings.add(warning);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AUser aUser = (AUser) o;
+        return userID == aUser.userID && guildID == aUser.guildID && jdaUserID == aUser.jdaUserID && points == aUser.points && reports.equals(aUser.reports) && warnings.equals(aUser.warnings) && reputations.equals(aUser.reputations);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userID, guildID, jdaUserID, points, reports, warnings, reputations);
     }
 }

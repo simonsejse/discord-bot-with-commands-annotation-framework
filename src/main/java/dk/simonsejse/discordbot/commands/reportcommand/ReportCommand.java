@@ -9,6 +9,7 @@ import dk.simonsejse.discordbot.entities.Report;
 import dk.simonsejse.discordbot.models.Role;
 import dk.simonsejse.discordbot.services.ReportService;
 import dk.simonsejse.discordbot.services.UserService;
+import dk.simonsejse.discordbot.utility.Colors;
 import dk.simonsejse.discordbot.utility.DateFormat;
 import dk.simonsejse.discordbot.utility.Messages;
 import net.dv8tion.jda.api.entities.Message;
@@ -18,6 +19,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.Button;
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -83,9 +85,8 @@ public class ReportCommand implements CommandPerform {
                                 .queue(m -> m.delete().queueAfter(40, TimeUnit.SECONDS, message -> this.reportListener.removeUserFromListen(reportedUserID)));
                     });
 
-            getExcel(reportedUserJda.getAsTag(), reports, file -> {
-                event.getTextChannel().sendFile(file).queue();
-            });
+
+            getExcel(reportedUserJda.getAsTag(), reports, file -> event.getTextChannel().sendFile(file).queue());
 
 
             this.reportListener.addUserToListen(reporteeUserID, reportedUserJda);
@@ -108,22 +109,40 @@ public class ReportCommand implements CommandPerform {
         headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        XSSFFont font = ((XSSFWorkbook) workbook).createFont();
-        font.setFontName("Arial");
-        font.setFontHeightInPoints((short) 16);
-        font.setBold(true);
-        headerStyle.setFont(font);
+        CellStyle valueStyle = workbook.createCellStyle();
+        valueStyle.setWrapText(true);
+        valueStyle.setFillForegroundColor(IndexedColors.GREY_80_PERCENT.index);
+        valueStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        Row userInfo = sheet.createRow(1);
-        Cell userIdTag = userInfo.createCell(1);
-        Cell userId = userInfo.createCell(2);
-        userIdTag.setCellValue("Reported User");
-        userId.setCellValue(reportedUser);
+        Font valueFont = workbook.createFont();
+        valueFont.setFontName("Arial");
+        valueFont.setBold(true);
+        valueFont.setColor(HSSFColor.WHITE.index);
+        valueStyle.setFont(valueFont);
+
+        Font headerFont = workbook.createFont();
+        headerFont.setFontName("Arial");
+        headerFont.setFontHeightInPoints((short) 16);
+        headerFont.setBold(true);
+        headerFont.setColor(HSSFColor.WHITE.index);
+        headerStyle.setFont(headerFont);
+
+        Row infoHeader = sheet.createRow(1);
+        Cell reportedTag = infoHeader.createCell(1);
+        reportedTag.setCellStyle(headerStyle);
+        reportedTag.setCellValue("Reported User");
+        Row infoValueRow = sheet.createRow(2);
+        Cell reportedCell = infoValueRow.createCell(1);
+        reportedCell.setCellStyle(valueStyle);
+        reportedCell.setCellValue(reportedUser);
 
         Row reportCountHeader = sheet.createRow(3);
         Cell reportCountTag = reportCountHeader.createCell(1);
-        Cell reportCount = reportCountHeader.createCell(2);
         reportCountTag.setCellValue("Antal Anmeldelser");
+        reportCountTag.setCellStyle(headerStyle);
+        Row reportCountValue = sheet.createRow(4);
+        Cell reportCount = reportCountValue.createCell(1);
+        reportCount.setCellStyle(valueStyle);
         reportCount.setCellValue(reports.size());
 
         Row headers = sheet.createRow(6);
@@ -144,24 +163,21 @@ public class ReportCommand implements CommandPerform {
         header4.setCellValue("Hvornår");
         header4.setCellStyle(headerStyle);
 
-        CellStyle style = workbook.createCellStyle();
-        style.setWrapText(true);
-
         for(int startRow = 7, index = 0; index < reports.size(); startRow++, index++){
             ReportDTO reportDTO = reports.get(index);
             Row aReport = sheet.createRow(startRow);
 
             Cell reportRID = aReport.createCell(1);
-            reportRID.setCellStyle(style);
+            reportRID.setCellStyle(valueStyle);
             reportRID.setCellValue(reportDTO.getRid());
             Cell reportReason = aReport.createCell(2);
-            reportReason.setCellStyle(style);
+            reportReason.setCellStyle(valueStyle);
             reportReason.setCellValue(reportDTO.getReason());
             Cell reportedBy = aReport.createCell(3);
-            reportedBy.setCellStyle(style);
-            reportedBy.setCellValue(reportDTO.getReportedBy());
+            reportedBy.setCellStyle(valueStyle);
+            reportedBy.setCellValue(String.valueOf(reportDTO.getReportedBy()));
             Cell whenReported = aReport.createCell(4);
-            whenReported.setCellStyle(style);
+            whenReported.setCellStyle(valueStyle);
             whenReported.setCellValue(reportDTO.getWhenReported().format(DateFormat.MAIN));
             //
         }

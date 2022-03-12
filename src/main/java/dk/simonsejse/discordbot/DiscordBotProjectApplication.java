@@ -87,7 +87,7 @@ public class DiscordBotProjectApplication extends ListenerAdapter {
 		log.info(String.format("Registrering %d commands!", commandsData.size()));
 
 		commandsData.forEach(c -> {
-			guild.upsertCommand(c).queue();
+			guild.updateCommands().addCommands(c).queue();
 		});
 		//commands.queue();
 	}
